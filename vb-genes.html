@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VectorBase genes info</title>
+
+    <!-- CSS includes. New definitions overwrite old ones -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="vb-genes.css">
+    <script src="js/raphael-min.js"></script>
+
+</head>
+<body>
+<div id="center" style="position:fixed;top:50%;left:50%"></div>
+<div id="phyloxml" class="hide"></div>
+<div class="container">
+
+    <div class="starter-template">
+        <h1>The VectorBase gene aggregator</h1>
+        <p class="lead">Aggregate info from a variety of biological databases<br>
+            for genes with a VectorBase ID</p>
+
+        <div class="row">
+            <div class="col-lg-4"></div>
+            <div class="col-lg-4">
+                <div class="input-group">
+                    <input id="query-text" type="text" class="form-control" placeholder="VectorBase Gene ID">
+                    <span class="input-group-btn">
+                <button class="btn btn-default" type="button" id="btn-go">Go!</button>
+            </span>
+                </div>
+            </div>
+            <div class="col-lg-4"></div>
+        </div>
+
+        <!-- example from http://getbootstrap.com/javascript/#collapse -->
+
+        <div class="panel-group spacer" id="accordion" style="display: none;" role="tablist"
+             aria-multiselectable="true">
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingOne">
+                    <h4 class="panel-title">
+                        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion"
+                           href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                            General info (from VectorBase)
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                    <div class="panel-body" id="collapseOneBody">
+
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingTwo">
+                    <h4 class="panel-title">
+                        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion"
+                           href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            Transcripts (from VectorBase)
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+                    <div class="panel-body" id="collapseTwoBody">
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingThree">
+                    <h4 class="panel-title">
+                        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion"
+                           href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                            Proteins (from VectorBase)
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+                    <div class="panel-body" id="collapseThreeBody">
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingFour">
+                    <h4 class="panel-title">
+                        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion"
+                           href="#collapseFour" aria-expanded="false" aria-controls="collapseThree"
+                           id="buildTree">
+                            Gene tree (from VectorBase)
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseFour" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+                    <div class="panel-body" id="collapseFourBody">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- template for general info -->
+    <script type="text/x-jsrender" id="archiveId">
+    <div>
+        <p>Type: {{html:type}} latest: {{html:latest}} version:{{html:version}} release:{{html:release}}</p>
+        <p>Is current: {{html:is_current}} assembly{{html:assembly}}</p>
+    </div>
+
+    </script>
+
+    <script type="text/x-jsrender" id="fastaSequence">
+    <div class="fasta">
+    <p>&gt{{html:id}}<br>
+    {{html:seq}}</p>
+    </div>
+
+    </script>
+
+    <!-- JS includes. Dependencies must be declared first -->
+    <script type="text/javascript" src="http://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.82/jsrender.min.js"></script>
+    <!-- for diplaying trees -->
+    <script type="text/javascript" src="js/raphael-min.js"></script>
+    <script type="text/javascript" src="js/jsphylosvg-min.js"></script>
+    <script>
+
+        // define global variables
+        var spinTarget = document.getElementById('center');
+        var spinner = new Spinner;
+
+        // bind function to Go button
+        $('#btn-go').on("click", function () {
+            var query = $('#query-text').val();
+            spinner.spin(spinTarget);
+            requestAjax(query);
+        });
+
+        $('#buildTree').on("click", function () {
+            var query = $('#query-text').val();
+            spinner.spin(spinTarget);
+            requestTree(query);
+
+        });
+
+        function requestAjax(geneId) {
+            var urlArchive = 'https://www.vectorbase.org/rest/archive/id/' + geneId + '?content-type=application/json';
+            var urlCDna = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=cds&multiple_sequences=1&mask=soft&content-type=application/json';
+            var urlProtein = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=protein&multiple_sequences=1&content-type=application/json';
+
+            $.when($.getJSON(urlArchive), $.getJSON(urlCDna), $.getJSON(urlProtein))
+                    .done(function (json1, json2, json3) {
+
+                        // Render archive info
+                        var template = $.templates("#archiveId");
+                        var html = template.render(json1[0]);
+                        $('#collapseOneBody').html(html);
+
+                        // Reset template and html
+                        template = $.templates('#fastaSequence');
+                        html = '';
+
+                        // Render transcripts
+                        json2[0].forEach(function (element) {
+                            html += template.render(element)
+                        });
+
+                        $('#collapseTwoBody').html(html);
+
+                        // Reset template and html
+                        template = $.templates('#fastaSequence');
+                        html = '';
+
+                        // Render proteins
+                        json3[0].forEach(function (element) {
+                            html += template.render(element)
+                        });
+
+                        $('#collapseThreeBody').html(html);
+
+                        $('#accordion').show();
+                        spinner.stop();
+
+                    }).fail(function () {
+                spinner.stop();
+                console.log('Failed while loading irViolinStats')
+            })
+
+        }
+
+        function requestTree(geneId) {
+            var urlTree = 'https://www.vectorbase.org/rest/genetree/member/id/' + geneId +
+                    '?content-type=text/x-phyloxml+xml' + ' pre';
+
+            $('#phyloxml').load(urlTree, function () {
+
+                var phylostring = $('#phyloxml').html().replace("<pre>", "")
+                        .replace("</pre>", "").replace(/&gt/g, ">").replace(/&lt/g, "<");
+                phylostring = decodeURI(phylostring);
+
+                var dataObject = {
+                    phyloxml: phylostring,
+                    fileSource: false
+                };
+                phylocanvas = new Smits.PhyloCanvas(
+                phylostring,
+                'collapseFourBody',
+                800, 800
+                );
+                spinner.stop();
+
+
+            } );
+//            $.get(urlTree).done(function (dxml) {
+//                console.log(dxml);
+//                var dataObject = {
+//                    xml: dxml,
+//                    fileSource: true
+//                };
+//                phylocanvas = new Smits.PhyloCanvas(
+//                dataObject,
+//                'collapseFourBody',
+//                800, 800
+//                );
+//            })
+//                    .fail(function () {
+//
+//                    });
+
+        }
+
+    </script>
+</div>
+</body>
+</html>

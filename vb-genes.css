@@ -1,0 +1,18 @@
+body {
+    padding-top: 50px;
+}
+.starter-template {
+    padding: 40px 15px;
+    text-align: center;
+}
+
+.spacer {
+    margin-top: 40px; /* define margin as you see fit */
+}
+
+.fasta {
+    font-family: monospace;
+    width: 80ch;
+    text-align: justify;
+    word-break: break-all;
+}
