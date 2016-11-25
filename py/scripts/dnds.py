@@ -15,17 +15,17 @@ import pdb
  # changes_observed = pickle.load(open('/home/qiime/Desktop/hpcleap_wp6_compbio/hpcleap_bioinf/data/observed_changes_dict.p','rb'))
 # changes_potential= pickle.load(open('/home/qiime/Desktop/hpcleap_wp6_compbio/hpcleap_bioinf/data/potential_changes_dict.p','rb'))
 
-with open('./data/observed_changes_dict.p','rb') as f:
+with open('./py/data/observed_changes_dict.p','rb') as f:
     changes_observed = pickle.load(f)
 
-with open('./data/potential_changes_dict.p','rb') as f:
+with open('./py/data/potential_changes_dict.p','rb') as f:
     changes_potential= pickle.load(f)
 
 #############
 # FUNCTIONS #
 #############
 
-pdb.set_trace()
+
 
 def chunks(l, n):
     """ Yield successive n-sized chunks from l. """
@@ -33,6 +33,38 @@ def chunks(l, n):
         yield l[i:i+n]
 
 def dnds( seq1, seq2, msCorrect='approximate', sliding=False, windowLength=3, stepLength=1):
+    """ Perform dN/dS analysis, using the 'NG' algoritm, includes both whole sequence or sliding window, and either an approximate or exact multiple-substiution correction method. (@TODO: make sure it actually is exact... it could be
+             something else)
+            
+
+    ARGS:
+        seq1,  a DNA sequence as string of letters, AGTC. Seq1 must be equal in length 
+            to, and aligned with, seq2, with gaps trimmed away. @TODO: how on earth can 
+            we reliably make this work on the web service?
+            
+            e.g. seq1 = 'ATGCGCAAATACTCCCCCTTCCGAAATGGATACATGGAACCCACCCTTGGGCAGCACCTCCCAACCCTGTCTTTTCCAGACCCCGGACTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGGCTCCGTTGTCTGCATGTACCTCTACCAGCTTTCCCCCCCCATCACCTGGCCCCTCCTGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAACGAATAGAAAAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTGCCCACCACCCTTTTCCAGCCTGCTAGGGCACCCGTCACGCTGACAGCCTGGCAAAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGATTTCCGGGCCCTGCCCTAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCCTTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCCTCATTTCTACTCTCACACGGCCTCATACAGTACTCTTCCTTTCATAATTTGCATCTCCTATTTGAAGAATACACCAACATCCCCATTTCTCTACTTTTTAACGAAAAAGAGGCAGATGACAATGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCTCAGTGAAAAACATTTCCGTGAAACAGAAGTC'
+        
+        seq2,  a DNA sequence similar to seq1 but with differences (substitutions), 
+            representing a CDS orthologue of seq1 from a different species. Read 
+            description of seq1 for other required similarities to avoid errors.
+            
+            e.g. seq2 = 'ATGCGCAAGTACTCCCCCTTCCGAAACGGATACATGGAACCCACCCTTGGGCAACACCTCCCAACCCTGTCTTTTCCAGACCCCGGCCTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGACTCTGTTGTCTGCCTGTACCTCTACCAGCTCTCCCCCCCCATCACCTGGCCCCTCCCGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAGCGTATGGAAGAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTACCAACCACCCTTTTCCAGCCTGCTAGGGCCCCCGTCACGTTGACCGCCTGGCAGAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGGTTTCCGGACCCTGCCCCAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCATTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCTTCATTTCTACTCTCACACGGCCTCATACAGTACTCCTCCTTTCACAATTTACATCTCCTTTTTGAAGAATACACCAACATCCCCGTTTCTCTACTTTTTAACGAAAAAGAGGCAAATGACACTGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCCCGCTGAAAAACATTTCCGCGAAACAGAAGTC'
+
+        msCorrect, a string to toggle between multiple-substitution correction methods:
+            "approximate", "exact" (@TODO: make sure it actually is exact... it could be
+             something else)
+            
+            e.g. msCorrect = 'approximate'
+
+        sliding, a boolean to toggle between sliding window analysis (vector of dN/dS values at successive chunks of sequence) or whole sequence analysis (a single 
+            dN/dS value for the given pair of input sequences), either: True, False
+            
+            e.g. sliding = False
+
+        windowLength, an integer specifying the width of the sliding window, measured in DNA basepairs, from 1-to-length(seq1)
+            e.g. 
+
+    """
 
     # TODO: stop codons to deal with, reject
     # TODO: ambiguous bases to deal with: gaps, Ns, Xs
@@ -75,22 +107,29 @@ def dnds( seq1, seq2, msCorrect='approximate', sliding=False, windowLength=3, st
 
             try:
                 if msCorrect=='approximate':
+                    print "cow holy"
                     dN = -(3./4.)*math.log(1.-(4./3.)*pN)
                     dS = -(3./4.)*math.log(1.-(4./3.)*pS)
 
+                # @TODO: what is this commented code? I don't remember...
                 # elif msCorrect=='exact':
                 #     d=ln(1-p*4/3)/ln(1-3/(4*N))
 
-                else:
+                else: # msCorrect=='????'  # @TODO: is this the exact one? Or something else?
+                    print "holy cow"
                     dN = pN
                     dS = pS
                 window_stats[window]['dNdS'] = dN/dS
+            # @TODO: I'm not sure I'm treating the following exceptions in the right way...
+            # technically it woud be best so exclude these from downstream analyses? 
+            # e.g. missing value/datapoint on a plot of dN/dS (y-axis) vs. window interval (x-axis)
             except ValueError:
                 window_stats[window]['dNdS'] = None
             except ZeroDivisionError:
                 window_stats[window]['dNdS'] = float('Inf')
         return window_stats
     else:
+        # STATS for WHOLE SEQ
         S   = sum(list_S)
         Sd  = sum(list_Sd)
         pS  = Sd/S 
@@ -98,35 +137,40 @@ def dnds( seq1, seq2, msCorrect='approximate', sliding=False, windowLength=3, st
         Nd  = sum(list_Nd)
         pN  = Nd/N
 
-        if msCorrect:
+        if msCorrect=='approximate':
+            print "cow holy (whole)"
             dS  = -(3./4.)*math.log(1.-(4./3.)*pS)
             dN  = -(3./4.)*math.log(1.-(4./3.)*pN)
-        else: 
-            dS  = pS
+        else: # @TODO: is this the exact one? Or something else? 
+            print "holy cow (whole)"
+            dS  = pS  # i.e. dS = Sd/S
             dN  = pN
 
-        return dN/dS
+        return dN/dS  # i.e. omega = dN/dS = (Nd/N)/(Sd/S)
 
 
 # seq1 = 'CTTTTTAACGAAAAAGAGGCAGATGA'
 # seq2 = 'ATGGCCCACTTCCCAGGGTTTGGACA'
 
+
+# dN/dS=0.15270463083614955 with msCorrect='approximate', dN/dS=0.16529268957638238 with 
+# msCorrect='exact', MATLAB gives: dN/dS=0.0221=dnds(seq1,seq2, 'geneticCode', 1, 'Method', 'NG'). This is a huge error, an order of magnitude off. 
 seq1 = 'ATGCGCAAATACTCCCCCTTCCGAAATGGATACATGGAACCCACCCTTGGGCAGCACCTCCCAACCCTGTCTTTTCCAGACCCCGGACTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGGCTCCGTTGTCTGCATGTACCTCTACCAGCTTTCCCCCCCCATCACCTGGCCCCTCCTGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAACGAATAGAAAAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTGCCCACCACCCTTTTCCAGCCTGCTAGGGCACCCGTCACGCTGACAGCCTGGCAAAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGATTTCCGGGCCCTGCCCTAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCCTTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCCTCATTTCTACTCTCACACGGCCTCATACAGTACTCTTCCTTTCATAATTTGCATCTCCTATTTGAAGAATACACCAACATCCCCATTTCTCTACTTTTTAACGAAAAAGAGGCAGATGACAATGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCTCAGTGAAAAACATTTCCGTGAAACAGAAGTC'
-seq2 = 'ATGCGCAAGTACTCCCCCTTCCGAAACGGATACATGGAACCCACCCTTGGGCAACACCTCCCAACCCTGTCTTTTCCAGACCCCGGCCTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGACTCTGTTGTCTGCCTGTACCTCTACCAGCTCTCCCCCCCCATCACCTGGCCCCTCCCGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAGCGTATGGAAGAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTACCAACCACCCTTTTCCAGCCTGCTAGGGCCCCCGTCACGTTGACCGCCTGGCAGAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGGTTTCCGGACCCTGCCCCAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCATTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCTTCATTTCTACTCTCACACGGCCTCATACAGTACTCCTCCTTTCACAATTTACATCTCCTTTTTGAAGAATACACCAACATCCCCGTTTCTCTACTTTTTAACGAAAAAGAGGCAAATGACACTGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCCCGCTGAAAAACATTTCCGCGAAACAGAAGTC'
+seq2 = 'ATGCGCAAGTACTCCCCCTTCCGAAACGGATACATGGAACCCACCCTTGGGCAACACCTCCCAACCCTGTCTTTTCCAGACCCCGGCCTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGACTCTGTTGTCTGCCTGTACCTCTACCAGCTCTCCCCCCCCATCACCTGGCCCCTCCCGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAGCGTATGGAAGAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTACCAACCACCCTTTTCCAGCCTGCTAGGGCCCCCGTCACGTTGACCGCCTGGCAGAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGGTTTCCGGACCCTGCCCCAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCATTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCTTCATTTCTACTCTCACACGGCCTCATACAGTACTCCTCCTTTCACAATTTACATCTCCTTTTTGAAGAATACACCAACATCCCCGTTTCTCTACTTTTTAACGAAAAAGAGGCAAATGACACTGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCCCGCTGAAAAACATTTCCGCGAAACAGAAGTC' 
 
 # Note: msCorrect="aproximate"
-dnds_sliding = dnds( seq1,seq2, msCorrect='approximate', sliding=True, windowLength=50, stepLength=1 )
+#dnds_sliding = dnds( seq1,seq2, msCorrect='approximate', sliding=True, windowLength=50, stepLength=1 )
 
 # # Note: msCorrext="exact"
 # dnds_sliding = dnds( seq1,seq2, msCorrect='exact', sliding=True, windowLength=50, stepLength=1 )
 
-dnds_whole = dnds( seq1,seq2, msCorrect=True, sliding=False )
+dnds_whole = dnds( seq1,seq2, msCorrect='exact', sliding=False )
 
 #dnds_sliding
 
 import pprint
-pprint.pprint(dnds_sliding)
-pprint.pprint(dnds_whole)
+#pprint.pprint(dnds_sliding)  # dict of dN/dS at each window
+pprint.pprint(dnds_whole)     # dN/dS of the whole seq, for the original test seq1,seq2 we get dN/dS=0.15270463083614955 with msCorrect='approximate', and dN/dS=0.16529268957638238 with msCorrect='exact'
 
 #print(dnds_whole) 
 
