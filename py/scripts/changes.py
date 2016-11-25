@@ -2,55 +2,87 @@
 import numpy as np 
 import pickle
 from  itertools import permutations
+import pdb  # @TODO: remove
 
 # FUNCTION DEFS:
 def geneticCode(name):
 
+    """ Dictionary that maps codons to amino acids """ 
+
     if name == 'standard':
-        gc = {	'AAA':'K', 'AAC':'N', 'AAG':'K', 'AAT':'N', 'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T', 'AGA':'R', 'AGC':'S', 'AGG':'R', \
-        		'AGT':'S','ATA':'I','ATC':'I','ATG':'M','ATT':'I','CAA':'Q','CAC':'H','CAG':'Q','CAT':'H','CCA':'P','CCC':'P','CCG':'P', \
-        		'CCT':'P','CGA':'R','CGC':'R','CGG':'R','CGT':'R','CTA':'L','CTC':'L','CTG':'L','CTT':'L','GAA':'E','GAC':'D','GAG':'E', \
-        		'GAT':'D','GCA':'A','GCC':'A','GCG':'A','GCT':'A','GGA':'G','GGC':'G','GGG':'G','GGT':'G','GTA':'V','GTC':'V','GTG':'V', \
-        		'GTT':'V','TAA':'*','TAC':'Y','TAG':'*','TAT':'Y','TCA':'S','TCC':'S','TCG':'S','TCT':'S','TGA':'*','TGC':'C','TGG':'W', \
-        		'TGT':'C','TTA':'L','TTC':'F','TTG':'L','TTT':'F'  }
+        gc = {  'AAA':'K', 'AAC':'N', 'AAG':'K', 'AAT':'N', 'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T', 'AGA':'R', 'AGC':'S', 'AGG':'R', \
+                'AGT':'S','ATA':'I','ATC':'I','ATG':'M','ATT':'I','CAA':'Q','CAC':'H','CAG':'Q','CAT':'H','CCA':'P','CCC':'P','CCG':'P', \
+                'CCT':'P','CGA':'R','CGC':'R','CGG':'R','CGT':'R','CTA':'L','CTC':'L','CTG':'L','CTT':'L','GAA':'E','GAC':'D','GAG':'E', \
+                'GAT':'D','GCA':'A','GCC':'A','GCG':'A','GCT':'A','GGA':'G','GGC':'G','GGG':'G','GGT':'G','GTA':'V','GTC':'V','GTG':'V', \
+                'GTT':'V','TAA':'*','TAC':'Y','TAG':'*','TAT':'Y','TCA':'S','TCC':'S','TCG':'S','TCT':'S','TGA':'*','TGC':'C','TGG':'W', \
+                'TGT':'C','TTA':'L','TTC':'F','TTG':'L','TTT':'F'  }
     return gc
 
 def potential_changes_dict(genetic_code):
 
-    potential_changes = {   'S': {	'AAA':0.0,'AAC':0.0,'AAG':0.0,'AAT':0.0, 'ACA':0.0, 'ACC':0.0, 'ACG':0.0, 'ACT':0.0, 'AGA':0.0, 'AGC':0.0, \
-    								'AGG':0.0, 'AGT':0.0, 'ATA':0.0, 'ATC':0.0, 'ATG':0.0, 'ATT':0.0, 'CAA':0.0, 'CAC':0.0, 'CAG':0.0, 'CAT':0.0, \
-    								'CCA':0.0,'CCC':0.0,'CCG':0.0,'CCT':0.0,'CGA':0.0,'CGC':0.0,'CGG':0.0,'CGT':0.0,'CTA':0.0,'CTC':0.0,'CTG':0.0, \
-    								'CTT':0.0,'GAA':0.0,'GAC':0.0,'GAG':0.0,'GAT':0.0,'GCA':0.0,'GCC':0.0,'GCG':0.0,'GCT':0.0,'GGA':0.0,'GGC':0.0, \
-    								'GGG':0.0,'GGT':0.0,'GTA':0.0,'GTC':0.0,'GTG':0.0,'GTT':0.0,'TAA':0.0,'TAC':0.0,'TAG':0.0,'TAT':0.0,'TCA':0.0, \
-    								'TCC':0.0,'TCG':0.0,'TCT':0.0,'TGA':0.0,'TGC':0.0,'TGG':0.0,'TGT':0.0,'TTA':0.0,'TTC':0.0,'TTG':0.0,'TTT':0.0},
+    """ Generate a dictionary, with S and N pre-calculated for all 
+    possible pairs of codons (key: pair of codons, value: (S,N).
 
-                            'N': {	'AAA':0.0, 'AAC':0.0, 'AAG':0.0, 'AAT':0.0, 'ACA':0.0, 'ACC':0.0, 'ACG':0.0, 'ACT':0.0, 'AGA':0.0, 'AGC':0.0, 'AGG':0.0, \
-                            		'AGT':0.0,'ATA':0.0,'ATC':0.0,'ATG':0.0,'ATT':0.0,'CAA':0.0,'CAC':0.0,'CAG':0.0,'CAT':0.0,'CCA':0.0,'CCC':0.0,'CCG':0.0, \
-                            		'CCT':0.0,'CGA':0.0,'CGC':0.0,'CGG':0.0,'CGT':0.0,'CTA':0.0,'CTC':0.0,'CTG':0.0,'CTT':0.0,'GAA':0.0,'GAC':0.0,'GAG':0.0, \
-                            		'GAT':0.0,'GCA':0.0,'GCC':0.0,'GCG':0.0,'GCT':0.0,'GGA':0.0,'GGC':0.0,'GGG':0.0,'GGT':0.0,'GTA':0.0,'GTC':0.0,'GTG':0.0, \
-                            		'GTT':0.0,'TAA':0.0,'TAC':0.0,'TAG':0.0,'TAT':0.0,'TCA':0.0,'TCC':0.0,'TCG':0.0,'TCT':0.0,'TGA':0.0,'TGC':0.0,'TGG':0.0, \
-                            		'TGT':0.0,'TTA':0.0,'TTC':0.0,'TTG':0.0,'TTT':0.0}}   
+    ARGS:
+        genetic_code, a dict mapping codons (keys), e.g. 'TTA', to 
+            amino-acid letter (values), e.g. 'L'
+            
+            e.g. geneticCode("standard")
+
+    Notes:
+
+        Sources of formulae:
+
+        http://www.megasoftware.net/mega4/WebHelp/part_iv___evolutionary_analysis/computing_evolutionary_distances/distance_models/synonymouse_and_nonsynonymous_substitution_models/hc_nei_gojobori_method.htm
+
+
+
+    """
+
+    potential_changes = {   'S': {  'AAA':0.0,'AAC':0.0,'AAG':0.0,'AAT':0.0, 'ACA':0.0, 'ACC':0.0, 'ACG':0.0, 'ACT':0.0, 'AGA':0.0, 'AGC':0.0, \
+                                    'AGG':0.0, 'AGT':0.0, 'ATA':0.0, 'ATC':0.0, 'ATG':0.0, 'ATT':0.0, 'CAA':0.0, 'CAC':0.0, 'CAG':0.0, 'CAT':0.0, \
+                                    'CCA':0.0,'CCC':0.0,'CCG':0.0,'CCT':0.0,'CGA':0.0,'CGC':0.0,'CGG':0.0,'CGT':0.0,'CTA':0.0,'CTC':0.0,'CTG':0.0, \
+                                    'CTT':0.0,'GAA':0.0,'GAC':0.0,'GAG':0.0,'GAT':0.0,'GCA':0.0,'GCC':0.0,'GCG':0.0,'GCT':0.0,'GGA':0.0,'GGC':0.0, \
+                                    'GGG':0.0,'GGT':0.0,'GTA':0.0,'GTC':0.0,'GTG':0.0,'GTT':0.0,'TAA':0.0,'TAC':0.0,'TAG':0.0,'TAT':0.0,'TCA':0.0, \
+                                    'TCC':0.0,'TCG':0.0,'TCT':0.0,'TGA':0.0,'TGC':0.0,'TGG':0.0,'TGT':0.0,'TTA':0.0,'TTC':0.0,'TTG':0.0,'TTT':0.0},
+
+                            'N': {  'AAA':0.0, 'AAC':0.0, 'AAG':0.0, 'AAT':0.0, 'ACA':0.0, 'ACC':0.0, 'ACG':0.0, 'ACT':0.0, 'AGA':0.0, 'AGC':0.0, 'AGG':0.0, \
+                                    'AGT':0.0,'ATA':0.0,'ATC':0.0,'ATG':0.0,'ATT':0.0,'CAA':0.0,'CAC':0.0,'CAG':0.0,'CAT':0.0,'CCA':0.0,'CCC':0.0,'CCG':0.0, \
+                                    'CCT':0.0,'CGA':0.0,'CGC':0.0,'CGG':0.0,'CGT':0.0,'CTA':0.0,'CTC':0.0,'CTG':0.0,'CTT':0.0,'GAA':0.0,'GAC':0.0,'GAG':0.0, \
+                                    'GAT':0.0,'GCA':0.0,'GCC':0.0,'GCG':0.0,'GCT':0.0,'GGA':0.0,'GGC':0.0,'GGG':0.0,'GGT':0.0,'GTA':0.0,'GTC':0.0,'GTG':0.0, \
+                                    'GTT':0.0,'TAA':0.0,'TAC':0.0,'TAG':0.0,'TAT':0.0,'TCA':0.0,'TCC':0.0,'TCG':0.0,'TCT':0.0,'TGA':0.0,'TGC':0.0,'TGG':0.0, \
+                                    'TGT':0.0,'TTA':0.0,'TTC':0.0,'TTG':0.0,'TTT':0.0}}   
 
     for codon in nt_to_aa.keys():
 
-         aa 		= nt_to_aa[codon]
-         codon_kept = codon
+        aa         = nt_to_aa[codon] # e.g. aa: "P"
+        codon_kept = codon
 
-         for codon_p in range(0,2+1):
+        # Calculate S and N (i.e. potential synonymous and potential
+        # non-synonymous sites) ()
 
-           nts = ['A','G','T','C']
+        # i.e. Of possible mutations that can occur on the codon, 
+        # what proportion are synonymous (no aa change)?
 
-           nts = list(''.join(nts).replace(codon_kept[codon_p],''))
-           
-           for nt in nts:
-                  codon=list(codon_kept)
-                  codon[codon_p]=nt
-                  codon=''.join(codon)
-                  if aa==nt_to_aa[codon]:
-                         potential_changes['S'][codon_kept]=potential_changes['S'][codon_kept]+1/3.0
+        # for each bp position in the codon...
+        for codon_p in range(0,2+1):
+
+            nts = ['A','G','T','C']  # @todo: refactor away
+            nts = list(''.join(nts).replace(codon_kept[codon_p],''))
+            
+            # ...and for each nucleotide that the bp can change 
+            # into... 
+            for nt in nts:
+                codon=list(codon_kept)
+                codon[codon_p]=nt
+                codon=''.join(codon)
+                
+                # ...count how many of them are synonymous.
+                if aa==nt_to_aa[codon]:
+                    potential_changes['S'][codon_kept]+=1/3.0 #@TODO: but why 1/3? to me it should be 1/(3*4)
                   
     for codon in potential_changes['S'].keys():
-           potential_changes['N'][codon]=3.0-potential_changes['S'][codon]
+        potential_changes['N'][codon]=3.0-potential_changes['S'][codon]
 
     codons      = nt_to_aa.keys()
     codonPairs  = list(permutations(codons,2))
@@ -68,10 +100,35 @@ def potential_changes_dict(genetic_code):
         ps2 = potential_changes['S'][codon2]
         codonPair_to_potential[pair] = {'N':(pn1+pn2)/2.,'S':(ps1+ps2)/2.}    # given an s1 codon and s2 codon, generate average potential 'N' and 'S'
 
-    with open('../data/potential_changes_dict.p','wb') as f:
+    # Pickle the output (later used by ./dnds.py) rather than return value, so this needs to only be run once.
+    with open('./py/data/potential_changes_dict.p','wb') as f:
         pickle.dump(codonPair_to_potential,f)
 
+    # @TODO: check that for a single pair of codons, i.e. one key in .keys(), gives the right 's' and 'n' value, i.e. potential non-synonymous change and potential synonymous change value
+
+    # @TODO: find out what: codonPair_to_potential actually is, then 
+    # add descr to func
+    #pdb.set_trace()
+
 def observed_changes_dict(genetic_code):
+
+
+    """ Generate a dictionary, with Sd and Nd pre-calculated for all 
+    possible pairs of codons (key: pair of codons, value: (Sd,Nd).
+
+    ARGS:
+        genetic_code, a dict mapping codons (keys), e.g. 'TTA', to 
+            amino-acid letter (values), e.g. 'L'
+            
+            e.g. geneticCode("standard")
+
+    Notes:
+
+        Sources of formulae:
+
+        http://www.megasoftware.net/mega4/WebHelp/part_iv___evolutionary_analysis/computing_evolutionary_distances/distance_models/synonymouse_and_nonsynonymous_substitution_models/hc_nei_gojobori_method.html
+
+    """
 
     codons      = nt_to_aa.keys()
     codonPairs  = list(permutations(codons,2))
@@ -116,7 +173,7 @@ def observed_changes_dict(genetic_code):
 
         codonPair_to_observed[pair] = {'S':np.mean(syn),'N':np.mean(non)}
 
-    with open('../data/observed_changes_dict.p','wb') as f:
+    with open('./py/data/observed_changes_dict.p','wb') as f:
         pickle.dump(codonPair_to_observed,f)
 
 # RUN
