@@ -3,6 +3,7 @@ import numpy as np
 import pickle
 from  itertools import permutations
 import pdb  # @TODO: remove
+import copy
 
 # FUNCTION DEFS:
 def geneticCode(name):
@@ -53,10 +54,14 @@ def potential_changes_dict(genetic_code):
                                     'GTT':0.0,'TAA':0.0,'TAC':0.0,'TAG':0.0,'TAT':0.0,'TCA':0.0,'TCC':0.0,'TCG':0.0,'TCT':0.0,'TGA':0.0,'TGC':0.0,'TGG':0.0, \
                                     'TGT':0.0,'TTA':0.0,'TTC':0.0,'TTG':0.0,'TTT':0.0}}   
 
+
+    
+
+    # Mutate (substitutions) all possible codons in the given genetic code, and count proportions of mutations that are synonymous and non-synonmyous
     for codon in nt_to_aa.keys():
 
         aa         = nt_to_aa[codon] # e.g. aa: "P"
-        codon_kept = codon
+        codon_kept = copy.deepcopy(codon)
 
         # Calculate S and N (i.e. potential synonymous and potential
         # non-synonymous sites) ()
@@ -67,20 +72,27 @@ def potential_changes_dict(genetic_code):
         # for each bp position in the codon...
         for codon_p in range(0,2+1):
 
-            nts = ['A','G','T','C']  # @todo: refactor away
-            nts = list(''.join(nts).replace(codon_kept[codon_p],''))
-            
+            nts = ['A','G','T','C']  # @DONE: refactor away, A: we can't, since the next line
+
+            nts.remove(codon[codon_p]) # we do not consider self substitutions, e.g. A->A
+
             # ...and for each nucleotide that the bp can change 
             # into... 
             for nt in nts:
+
                 codon=list(codon_kept)
+
+                #pdb.set_trace()
+
                 codon[codon_p]=nt
+
                 codon=''.join(codon)
                 
                 # ...count how many of them are synonymous.
                 if aa==nt_to_aa[codon]:
-                    potential_changes['S'][codon_kept]+=1/3.0 #@TODO: but why 1/3? to me it should be 1/(3*4)
-                  
+                    potential_changes['S'][codon_kept]+=1/3.0 #@DONE: Q: but why 1/3? to me it should be 1/(3*4), A: since it represents 1/3 of a "site"
+        
+    # Calculate proportion of non-synonymous changes, by subtracting away synonymous proportions         
     for codon in potential_changes['S'].keys():
         potential_changes['N'][codon]=3.0-potential_changes['S'][codon]
 
