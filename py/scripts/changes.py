@@ -88,9 +88,9 @@ def potential_changes_dict(genetic_code):
                 
                 # ...count how many of them are synonymous.
                 if nt_to_aa[codon]==nt_to_aa[codon_mutated]:
-                    potential_changes['S'][codon]+=1/3.0 #@DONE: Q: but why 1/3? to me it should be 1/(3*4), A: since it represents 1/3 of a "site"
+                    potential_changes['S'][codon]+=1.0/3.0 #@DONE: Q: but why 1/3? to me it should be 1/(3*4), A: since it represents 1/3 of a "site"
                 else:
-                    potential_changes['N'][codon]+=1/3.0 #@DONE: Q: but why 1/3? to me it should be 1/(3*4), A: since it represents 1/3 of a "site"
+                    potential_changes['N'][codon]+=1.0/3.0 #@DONE: Q: but why 1/3? to me it should be 1/(3*4), A: since it represents 1/3 of a "site"
 
             # assert((potential_changes['N'][codon]+potential_changes['S'][codon])==3.0)
 
@@ -210,22 +210,42 @@ def observed_changes_dict(genetic_code):
             codon2_path1 = list(codon2)
 
             for site in path:
-                # @TODO:DEBUG: I think I found it! we need to compare all mutated codons to the ORIGINAL codon, not successively mutated codons each mutation!
-                #codon1_past         = ''.join(codon1_path1)
 
+                # alternative 1 {{
+
+                # # @TODO:DEBUG: I think I found it! we need to compare all mutated codons to the ORIGINAL codon, not successively mutated codons each mutation!
+                # #codon1_past         = ''.join(codon1_path1)
+
+                # codon1_path1[site]  = codon2_path1[site]        # s1 = 'TTT' , s2 = 'ATA'  ==> 'TTT' --> 'ATT' 
+                # codon1_path1_str    = ''.join(codon1_path1)
+
+                # if nt_to_aa[codon1_path1_str] == nt_to_aa[codon1]:  # 'TTT --> 'ATT'
+                #     syn[i] += 1.0  
+                #     non[i] += 0.0
+                #     # syn.append(1)
+                #     # non.append(0)
+                # else:
+                #     syn[i] += 0.0
+                #     non[i] += 1.0
+                #     # syn.append(1)
+                #     # non.append(0)
+
+                # }} 1 alternative 2 {{ 
+
+                codon1_past         = ''.join(codon1_path1)
                 codon1_path1[site]  = codon2_path1[site]        # s1 = 'TTT' , s2 = 'ATA'  ==> 'TTT' --> 'ATT' 
-                codon1_path1_str    = ''.join(codon1_path1)
-
-                if nt_to_aa[codon1_path1_str] == nt_to_aa[codon1]:  # 'TTT --> 'ATT'
-                    syn[i] += 1.0  
-                    non[i] += 0.0
-                    # syn.append(1)
-                    # non.append(0)
+                codon1_path1        = ''.join(codon1_path1)
+                
+                if nt_to_aa[codon1_path1] == nt_to_aa[codon1_past]:  # 'TTT --> 'ATT'
+                    syn[i] = syn[i] + 1 
+                    non[i] = non[i] + 0
                 else:
-                    syn[i] += 0.0
-                    non[i] += 1.0
-                    # syn.append(1)
-                    # non.append(0)
+                    syn[i] = syn[i] + 0
+                    non[i] = non[i] + 1
+
+                codon1_path1 = list(codon1_path1)
+
+                # }} alternative 2
 
         try:
             assert isclose(np.mean(syn)+np.mean(non),float(len(path)))
