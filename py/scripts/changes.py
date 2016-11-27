@@ -6,6 +6,10 @@ import pdb  # @TODO: remove
 import copy
 
 # FUNCTION DEFS:
+def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
+    """ Check if two values are almost equal """
+    return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
 def geneticCode(name):
 
     """ Dictionary that maps codons to amino acids """ 
@@ -55,13 +59,11 @@ def potential_changes_dict(genetic_code):
                                     'TGT':0.0,'TTA':0.0,'TTC':0.0,'TTG':0.0,'TTT':0.0}}   
 
 
-    
-
     # Mutate (substitutions) all possible codons in the given genetic code, and count proportions of mutations that are synonymous and non-synonmyous
     for codon in nt_to_aa.keys():
 
-        aa         = nt_to_aa[codon] # e.g. aa: "P"
-        codon_kept = copy.deepcopy(codon)
+        # assert (codon not in codon_record)  @DONE: no duplicate entries
+        # codon_record.append(codon)  
 
         # Calculate S and N (i.e. potential synonymous and potential
         # non-synonymous sites) ()
@@ -80,21 +82,33 @@ def potential_changes_dict(genetic_code):
             # into... 
             for nt in nts:
 
-                codon=list(codon_kept)
-
-                #pdb.set_trace()
-
-                codon[codon_p]=nt
-
-                codon=''.join(codon)
+                codon_mutated = list(copy.deepcopy(codon))
+                codon_mutated[codon_p] = nt  # mutate the basepair
+                codon_mutated = ''.join(codon_mutated)
                 
                 # ...count how many of them are synonymous.
-                if aa==nt_to_aa[codon]:
-                    potential_changes['S'][codon_kept]+=1/3.0 #@DONE: Q: but why 1/3? to me it should be 1/(3*4), A: since it represents 1/3 of a "site"
+                if nt_to_aa[codon]==nt_to_aa[codon_mutated]:
+                    potential_changes['S'][codon]+=1/3.0 #@DONE: Q: but why 1/3? to me it should be 1/(3*4), A: since it represents 1/3 of a "site"
+                else:
+                    potential_changes['N'][codon]+=1/3.0 #@DONE: Q: but why 1/3? to me it should be 1/(3*4), A: since it represents 1/3 of a "site"
+
+            # assert((potential_changes['N'][codon]+potential_changes['S'][codon])==3.0)
+
+    
+        # @TEST: N + S == 3.0 per codon, as expected
+        #putative_total = potential_changes['S'][codon]+potential_changes['N'][codon]
+        # try:
+        #     assert isclose(putative_total, 3.0)
+        # except AssertionError: 
+        #     pdb.set_trace()
+
+
+        # @DONE:DEBUG:matlabTest: I looped over "N" and "S" dicts spearately assuming keys were alphabetical, wrong, so now I deal with codons as they go
+        #potential_changes['N'][codon]=3.0-potential_changes['S'][codon]
         
-    # Calculate proportion of non-synonymous changes, by subtracting away synonymous proportions         
-    for codon in potential_changes['S'].keys():
-        potential_changes['N'][codon]=3.0-potential_changes['S'][codon]
+    # # Calculate proportion of non-synonymous changes, by subtracting away synonymous proportions         
+    # for codon in potential_changes['S'].keys():
+    #     potential_changes['N'][codon]=3.0-potential_changes['S'][codon]
 
     codons      = nt_to_aa.keys()
     codonPairs  = list(permutations(codons,2))
@@ -104,13 +118,32 @@ def potential_changes_dict(genetic_code):
     codonPair_to_potential = {}
 
     for pair in codonPairs:
+
+        # @DEUG: non-directional dnds, I think this is causing matlabTest bug? A: turns out not to make much difference, mind-blown
+        
+        # alternative 1 {{
+
         codon1 = pair[0]
         codon2 = pair[1]
         pn1 = potential_changes['N'][codon1]
         pn2 = potential_changes['N'][codon2]
         ps1 = potential_changes['S'][codon1]
         ps2 = potential_changes['S'][codon2]
-        codonPair_to_potential[pair] = {'N':(pn1+pn2)/2.,'S':(ps1+ps2)/2.}    # given an s1 codon and s2 codon, generate average potential 'N' and 'S'
+        codonPair_to_potential[pair] = {'N':(pn1+pn2)/2.,'S':(ps1+ps2)/2.}
+
+        # }} alternative 2 {{
+
+        # codon1 = pair[0]
+        # #codon2 = pair[1]
+        # pn1 = potential_changes['N'][codon1]
+        # #pn2 = potential_changes['N'][codon2]
+        # ps1 = potential_changes['S'][codon1]
+        # #ps2 = potential_changes['S'][codon2]
+        # codonPair_to_potential[pair] = {'N':pn1,'S':ps1}
+
+        # }} alternative 2
+
+        # @TODO:DEBUG: is this assumption correct? Instead of average, perhaps we need to assume e.g. pn1 is "reference sequence" (ancestor), and only store pn1 rather than avg(pn1,pn2)? given an s1 codon and s2 codon, generate average potential 'N' and 'S'
 
     # Pickle the output (later used by ./dnds.py) rather than return value, so this needs to only be run once.
     with open('./py/data/potential_changes_dict.p','wb') as f:
@@ -149,15 +182,22 @@ def observed_changes_dict(genetic_code):
     
     codonPair_to_observed = {}
 
+    #alternative 1 {{
+
+
+    # @DONE: Q: I have no idea what the below is trying to do... why can't we just count the differences? Am I trying to simulate the ancestral sequence? A: it's finding all possible "mutational pathways" from one codon to the other, from all possible pathways we can yeild the values we need. 
+    # NOTES: commented for now, and trying out the counting of differences.
     for pair in codonPairs:
         codon1 = pair[0]
         codon2 = pair[1]
         indices_to_permute = []
 
-        for position in range(0,3):
-            if not codon1[position] == codon2[position]:
-                indices_to_permute.append(position)
+        # Collect the position of the letters (1, 2, 3) where the two sequences differ... 
+        for letter_i in range(0,3):
+            if not codon1[letter_i] == codon2[letter_i]:
+                indices_to_permute.append(letter_i)
 
+        # We now have all the possible mutational pathways, represented as indices 
         permuted_indices = list(permutations(indices_to_permute))
         syn = []
         non = []
@@ -170,20 +210,70 @@ def observed_changes_dict(genetic_code):
             codon2_path1 = list(codon2)
 
             for site in path:
-                codon1_past         = ''.join(codon1_path1)
-                codon1_path1[site]  = codon2_path1[site]        # s1 = 'TTT' , s2 = 'ATA'  ==> 'TTT' --> 'ATT' 
-                codon1_path1        = ''.join(codon1_path1)
-                
-                if nt_to_aa[codon1_path1] == nt_to_aa[codon1_past]:  # 'TTT --> 'ATT'
-                    syn[i] = syn[i] + 1 
-                    non[i] = non[i] + 0
-                else:
-                    syn[i] = syn[i] + 0
-                    non[i] = non[i] + 1
+                # @TODO:DEBUG: I think I found it! we need to compare all mutated codons to the ORIGINAL codon, not successively mutated codons each mutation!
+                #codon1_past         = ''.join(codon1_path1)
 
-                codon1_path1 = list(codon1_path1)
+                codon1_path1[site]  = codon2_path1[site]        # s1 = 'TTT' , s2 = 'ATA'  ==> 'TTT' --> 'ATT' 
+                codon1_path1_str    = ''.join(codon1_path1)
+
+                if nt_to_aa[codon1_path1_str] == nt_to_aa[codon1]:  # 'TTT --> 'ATT'
+                    syn[i] += 1.0  
+                    non[i] += 0.0
+                    # syn.append(1)
+                    # non.append(0)
+                else:
+                    syn[i] += 0.0
+                    non[i] += 1.0
+                    # syn.append(1)
+                    # non.append(0)
+
+        try:
+            assert isclose(np.mean(syn)+np.mean(non),float(len(path)))
+        except AssertionError:
+            pdb.set_trace()
+
 
         codonPair_to_observed[pair] = {'S':np.mean(syn),'N':np.mean(non)}
+
+    #}} alternative 2 {{ 
+
+    #
+    # Count observed differences between two codons, either: synonymous difference, or non-synonymous
+    # 
+
+    # @TODO:debug: maybe use explicit floats to store counts? 1.0 instead of 1
+
+    # for codon1,codon2 in codonPairs:
+
+    #     codonPair_to_observed[(codon1,codon2)] = {'S':int(),'N':int()}  # None instead of Int() since we want it to fail if we missed it later  
+
+
+        # determine how many letters differ (if >1 then we need to determine 
+        # "mutational pathways", and count the total syn and non-syn changes
+        # along all pathways
+
+
+
+        # # count no. synonymous and non-synonymous differences for this pair of codons, iterate over each letter in a codon
+        # for letter_i in range(0,len(codon1)):
+
+        #     # Do we have a difference?
+        #     if codon1[letter_i]==codon2[letter_i]:
+        #         pass
+        #     else:
+        #         # Is the difference synonymous?
+        #         if nt_to_aa[codon1]==nt_to_aa[codon2]:
+        #             codonPair_to_observed[(codon1,codon2)]['S'] += 1.0
+        #         else:
+        #             codonPair_to_observed[(codon1,codon2)]['N'] += 1.0
+
+        # #@TODO:TEST:ensure we never have more than 3 total differences
+        # try:
+        #     assert( (codonPair_to_observed[(codon1,codon2)]['N']+codonPair_to_observed[(codon1,codon2)]['S']) <= 3.0 )
+        # except AssertionError:
+        #     pdb.set_trace()
+
+    #}} alternative 2
 
     with open('./py/data/observed_changes_dict.p','wb') as f:
         pickle.dump(codonPair_to_observed,f)
