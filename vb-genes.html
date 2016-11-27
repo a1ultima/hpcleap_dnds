@@ -80,21 +80,55 @@
                     </div>
                 </div>
             </div>
+			
             <div class="panel panel-default">
                 <div class="panel-heading" role="tab" id="headingFour">
                     <h4 class="panel-title">
                         <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion"
-                           href="#collapseFour" aria-expanded="false" aria-controls="collapseThree"
+                           href="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                            Protein domain annotation (from VectorBase)
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseFour" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingFour">
+                    <div class="panel-body" id="collapseFourBody">
+                    </div>
+                </div>
+            </div>
+			
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingFive">
+                    <h4 class="panel-title">
+                        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion"
+                           href="#collapseFive" aria-expanded="false" aria-controls="collapseFive"
                            id="buildTree">
                             Gene tree (from VectorBase)
                         </a>
                     </h4>
                 </div>
-                <div id="collapseFour" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
-                    <div class="panel-body" id="collapseFourBody">
+                <div id="collapseFive" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingFive">
+                    <div class="panel-body" id="collapseFiveBody">
                     </div>
                 </div>
             </div>
+			
+			<div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingSix">
+                    <h4 class="panel-title">
+                        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion"
+                           href="#collapseSix" aria-expanded="false" aria-controls="collapseSix"
+                           id="run-py">
+                            Python interface
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseSix" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingSix">
+                    <div class="panel-body" id="collapseSixBody">
+                    </div>
+                </div>
+            </div>
+			
+			
         </div>
 
     </div>
@@ -116,6 +150,17 @@
 
     </script>
 
+
+    <script type="text/x-jsrender" id="domains">
+
+    <div>
+		<p>Input: {{html:input}}</p>
+		<p>Output: {{html:output}}</p>
+    </div>
+
+    </script>	
+	
+	
     <!-- JS includes. Dependencies must be declared first -->
     <script type="text/javascript" src="http://code.jquery.com/jquery-3.1.1.min.js"></script>
     <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
@@ -130,7 +175,7 @@
         var spinTarget = document.getElementById('center');
         var spinner = new Spinner;
 
-        // bind function to Go button
+        // bind function to Go button  ///jquery$
         $('#btn-go').on("click", function () {
             var query = $('#query-text').val();
             spinner.spin(spinTarget);
@@ -141,16 +186,21 @@
             var query = $('#query-text').val();
             spinner.spin(spinTarget);
             requestTree(query);
-
+        });
+		
+		$('#run-py').on("click", function () {
+            var query = $('#query-text').val();
+            spinner.spin(spinTarget);
+            RunPy(query);
         });
 
         function requestAjax(geneId) {
             var urlArchive = 'https://www.vectorbase.org/rest/archive/id/' + geneId + '?content-type=application/json';
             var urlCDna = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=cds&multiple_sequences=1&mask=soft&content-type=application/json';
             var urlProtein = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=protein&multiple_sequences=1&content-type=application/json';
-
-            $.when($.getJSON(urlArchive), $.getJSON(urlCDna), $.getJSON(urlProtein))
-                    .done(function (json1, json2, json3) {
+			var urlDomains = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=protein&multiple_sequences=1&content-type=application/json';
+            $.when($.getJSON(urlArchive), $.getJSON(urlCDna), $.getJSON(urlProtein), $.getJSON(urlDomains))
+                    .done(function (json1, json2, json3, json4) {
 
                         // Render archive info
                         var template = $.templates("#archiveId");
@@ -176,8 +226,26 @@
                         json3[0].forEach(function (element) {
                             html += template.render(element)
                         });
+						
+						$('#collapseThreeBody').html(html);
+						
+						// Reset template and html
+                        template = $.templates('#fastaSequence');
+                        html = '';
+						
 
-                        $('#collapseThreeBody').html(html);
+						
+                        // Render protein domains
+                        json4[0].forEach(function (element) {
+                            html += template.render(element)
+                        });
+						
+						$('#collapseFourBody').html(html);
+						
+						// Reset template and html
+                        template = $.templates('#fastaSequence');
+                        html = '';
+						
 
                         $('#accordion').show();
                         spinner.stop();
@@ -188,7 +256,23 @@
             })
 
         }
-
+		
+		function RunPy(geneId) {
+			$.ajax({
+					type: 'POST',
+					url: "python/example.py",
+					data: {param: geneId},
+					dataType: "text",
+					success: function(response){
+						output = response;
+						alert(output);
+					}
+			}).done(function(data){
+			console.log(data);
+			alert(data);
+			});
+		}
+		
         function requestTree(geneId) {
             var urlTree = 'https://www.vectorbase.org/rest/genetree/member/id/' + geneId +
                     '?content-type=text/x-phyloxml+xml' + ' pre';
