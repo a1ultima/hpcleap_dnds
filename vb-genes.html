@@ -260,7 +260,7 @@
 		function RunPy(geneId) {
 			$.ajax({
 					type: 'POST',
-					url: "cgi-bin/example.py",
+					url: "python/example.py",
 					data: {param: geneId},
 					dataType: "text",
 					success: function(response){
