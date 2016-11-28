@@ -1,9 +1,16 @@
+#!/usr/bin/python
+
+"""
+
+@TODO: descriptions etc.
+
+"""
+
 # IMPORTS:
 import numpy as np 
 import pickle
 from  itertools import permutations
-import pdb  # @TODO: remove
-import copy
+import copy # @TODO: remove the deepcopying?
 
 # FUNCTION DEFS:
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
@@ -23,13 +30,13 @@ def geneticCode(name):
                 'TGT':'C','TTA':'L','TTC':'F','TTG':'L','TTT':'F'  }
     return gc
 
-def potential_changes_dict(genetic_code):
+def potential_changes_dict(nt_to_aa):
 
     """ Generate a dictionary, with S and N pre-calculated for all 
     possible pairs of codons (key: pair of codons, value: (S,N).
 
     ARGS:
-        genetic_code, a dict mapping codons (keys), e.g. 'TTA', to 
+        nt_to_aa, a dict mapping codons (keys), e.g. 'TTA', to 
             amino-acid letter (values), e.g. 'L'
             
             e.g. geneticCode("standard")
@@ -155,14 +162,17 @@ def potential_changes_dict(genetic_code):
     # add descr to func
     #pdb.set_trace()
 
-def observed_changes_dict(genetic_code):
+    return codonPair_to_potential
 
+
+
+def observed_changes_dict(nt_to_aa):
 
     """ Generate a dictionary, with Sd and Nd pre-calculated for all 
     possible pairs of codons (key: pair of codons, value: (Sd,Nd).
 
     ARGS:
-        genetic_code, a dict mapping codons (keys), e.g. 'TTA', to 
+        nt_to_aa, a dict mapping codons (keys), e.g. 'TTA', to 
             amino-acid letter (values), e.g. 'L'
             
             e.g. geneticCode("standard")
@@ -250,7 +260,8 @@ def observed_changes_dict(genetic_code):
         try:
             assert isclose(np.mean(syn)+np.mean(non),float(len(path)))
         except AssertionError:
-            pdb.set_trace()
+            # pdb.set_trace()
+            raise ValueError("Calculations are incorrect, mutation pathways calculation failed...")
 
 
         codonPair_to_observed[pair] = {'S':np.mean(syn),'N':np.mean(non)}
@@ -298,11 +309,15 @@ def observed_changes_dict(genetic_code):
     with open('./py/data/observed_changes_dict.p','wb') as f:
         pickle.dump(codonPair_to_observed,f)
 
-# RUN
-nt_to_aa = geneticCode('standard')
-potential_changes_dict(nt_to_aa)
-observed_changes_dict(nt_to_aa)
-print('COMPLETE!')
+    return codonPair_to_observed
+
+
+if __name__ == "__main__":
+    # RUN
+    nt_to_aa_d = geneticCode('standard')
+    potential_changes_dict(nt_to_aa_d)
+    observed_changes_dict(nt_to_aa_d)
+    #print('COMPLETE!')
 
 
 

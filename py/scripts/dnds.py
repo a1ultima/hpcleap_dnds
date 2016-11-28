@@ -1,9 +1,35 @@
+#!/usr/bin/python
+
+"""
+
+Calculate dN/dS using Nei Gojobori method with Juke-Cantor's multiple-substitution correction (optional), and whole sequence or sliding window. Tested against MATLAB's dnds().
+
+USAGE: 
+    
+    Run this from: 
+
+    hpcleap_dnds/  (i.e. ../../)
+ 
+REQUIREMENTS:
+
+    scripts:
+
+        - hpcleap_dnds/py/scripts/changes.py (hpcleap_dnds/py/scripts/)
+
+    data:
+
+        observed_changes.p, potential_changes.p: returned by changes.py
+        seq1, seq2: @TODO: make cmd or file input arg
+
+"""
 ############
 # IMPORTS: #
 ############
 
 import pickle
 import math
+import changes as codon_pair_data
+import warnings
 import pdb
 
 # @TODO:REMOVE: \/ and \/\/
@@ -15,11 +41,6 @@ import pdb
  # changes_observed = pickle.load(open('/home/qiime/Desktop/hpcleap_wp6_compbio/hpcleap_bioinf/data/observed_changes_dict.p','rb'))
 # changes_potential= pickle.load(open('/home/qiime/Desktop/hpcleap_wp6_compbio/hpcleap_bioinf/data/potential_changes_dict.p','rb'))
 
-with open('./py/data/observed_changes_dict.p','rb') as f:
-    changes_observed = pickle.load(f)
-
-with open('./py/data/potential_changes_dict.p','rb') as f:
-    changes_potential= pickle.load(f)
 
 #############
 # FUNCTIONS #
@@ -32,7 +53,7 @@ def chunks(l, n):
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
 
-def dnds( seq1, seq2, msCorrect='approximate', sliding=False, windowLength=3, stepLength=1):
+def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximate', sliding=False, windowLength=3, stepLength=1):
     """ Perform dN/dS analysis, using the 'NG' algoritm, includes both whole sequence or sliding window, and either an approximate or exact multiple-substiution correction method. (@TODO: make sure it actually is exact... it could be
              something else)
             
@@ -50,6 +71,12 @@ def dnds( seq1, seq2, msCorrect='approximate', sliding=False, windowLength=3, st
             
             e.g. seq2 = 'ATGCGCAAGTACTCCCCCTTCCGAAACGGATACATGGAACCCACCCTTGGGCAACACCTCCCAACCCTGTCTTTTCCAGACCCCGGCCTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGACTCTGTTGTCTGCCTGTACCTCTACCAGCTCTCCCCCCCCATCACCTGGCCCCTCCCGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAGCGTATGGAAGAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTACCAACCACCCTTTTCCAGCCTGCTAGGGCCCCCGTCACGTTGACCGCCTGGCAGAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGGTTTCCGGACCCTGCCCCAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCATTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCTTCATTTCTACTCTCACACGGCCTCATACAGTACTCCTCCTTTCACAATTTACATCTCCTTTTTGAAGAATACACCAACATCCCCGTTTCTCTACTTTTTAACGAAAAAGAGGCAAATGACACTGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCCCGCTGAAAAACATTTCCGCGAAACAGAAGTC'
 
+        changes_potential, a dict, with key=pair of codons tuple, e.g. ('ATG','ATG'), and value=['S':<S>,'N':<N>]. Where <S> is the number of potential synonmyous sites for each codon (averaged between the two codons), and <N> is the same but for non-synonymous sites.
+
+            e.g. changes.potential_changes_dict(...)  (see: ./changes.py)
+
+        changes_observed, @TODO
+
         msCorrect, a string to toggle between multiple-substitution correction methods:
             "approximate", "exact" (@TODO: make sure it actually is exact... it could be
              something else)
@@ -62,7 +89,14 @@ def dnds( seq1, seq2, msCorrect='approximate', sliding=False, windowLength=3, st
             e.g. sliding = False
 
         windowLength, an integer specifying the width of the sliding window, measured in DNA basepairs, from 1-to-length(seq1)
-            e.g. 
+            
+            e.g. windowLength = 50
+
+    NOTES:
+
+        Sources of formulae:
+
+            http://www.megasoftware.net/mega4/WebHelp/part_iv___evolutionary_analysis/computing_evolutionary_distances/distance_models/synonymouse_and_nonsynonymous_substitution_models/hc_nei_gojobori_method.html
 
     """
 
@@ -74,21 +108,22 @@ def dnds( seq1, seq2, msCorrect='approximate', sliding=False, windowLength=3, st
     codons_seq2   = [codon for codon in chunks(seq2,3)]  #splits
     codons_paired = [pair for pair in zip(codons_seq1,codons_seq2) if (len(pair[0])+len(pair[1]))==6] # aligned codons are paired into tuples, excess codons are truncated
 
-    changes = {'observed':{'S':[],'N':[]},'potential':{'S':[],'N':[]}}
+    # @TODO: the next for loop is extremely innefficient, I should set the structure of the changes_potential and changes_observed dicts to how I want it to look, a priori, i.e. when it's instantiated in changes.py. 
+    # OR just remove this chunk and access the data as they come in the args
+
+    changes_all = {'observed':{'S':[],'N':[]},'potential':{'S':[],'N':[]}}
 
     for pair in codons_paired:
-        changes['potential']['S'].append(changes_potential[pair]['S'])
-        changes['potential']['N'].append(changes_potential[pair]['N'])
-        changes['observed']['S'].append(changes_observed[pair]['S'])
-        changes['observed']['N'].append(changes_observed[pair]['N'])
+        changes_all['potential']['S'].append(changes_potential[pair]['S'])
+        changes_all['potential']['N'].append(changes_potential[pair]['N'])
+        changes_all['observed']['S'].append(changes_observed[pair]['S'])
+        changes_all['observed']['N'].append(changes_observed[pair]['N'])
 
-    list_S  = changes['potential']['S']
-    list_Sd = changes['observed']['S']
+    list_S  = changes_all['potential']['S']
+    list_Sd = changes_all['observed']['S']
 
-    list_N  = changes['potential']['N']
-    list_Nd = changes['observed']['N']
-
-    #pdb.set_trace()
+    list_N  = changes_all['potential']['N']
+    list_Nd = changes_all['observed']['N']
 
     if sliding:
         # STATS per WINDOW
@@ -143,26 +178,36 @@ def dnds( seq1, seq2, msCorrect='approximate', sliding=False, windowLength=3, st
             #print "cow holy (whole)"
 
             if (pS>=3./4.):
-                raise ValueError("Approximate multiple-substitutions correction cannot be achieved, pS>=3/4, try alternative value for argument: msCorrect...") 
+                pdb.set_trace()
+                raise ValueError("Approximate multiple-substitutions correction cannot be achieved, SYNONYMOUS changes per synonymous site, pS>=3/4, try alternative value for argument: msCorrect...") 
 
             if (pN>=3./4.):
-                raise ValueError("Approximate multiple-substitutions correction cannot be achieved, pN>=3/4, try alternative value for argument: msCorrect...") 
+                pdb.set_trace()
+                raise ValueError("Approximate multiple-substitutions correction cannot be achieved, NON-SYNONYMOUS changes per synonymous site, pN>=3/4, try alternative value for argument: msCorrect...") 
 
             # @TODO: if the proportion of syn is >3/4 it might break
             try:
                 dS  = -(3./4.)*math.log(1.-((4./3.)*pS))
                 dN  = -(3./4.)*math.log(1.-((4./3.)*pN))
+                dN_dS = dN/dS
             except ValueError:
-                pdb.set_trace()
+                warnings.warn("ValueError: Approximate multiple-substitutions correction cannot be achieved: UNKNOWN reason, probably due to illegal numbers in a log() function...") 
+                dN_dS = float("nan")
+                return dN_dS
+            except ZeroDivisionError:
+                warnings.warn("ZeroDiviSionError: Approximate multiple-substitutions correction cannot be achieved: UNKNOWN reason, probably due to illegal numbers in a log() function...") 
+                dN_dS = float('Inf')
+                return dN_dS
 
         else: # @TODO: is this the exact one? Or something else? 
             #print "holy cow (whole)"
             dS  = pS  # i.e. dS = Sd/S
             dN  = pN
+            dN_dS = dN/dS
 
-        print "dN/dS: "+str(dN/dS)
+        #print "dN/dS: "+str(dN/dS)
 
-        return (dN/dS)  # i.e. omega = dN/dS = (Nd/N)/(Sd/S)
+        return dN_dS  # i.e. omega = dN/dS = (Nd/N)/(Sd/S)
 
 
 # seq1 = 'CTTTTTAACGAAAAAGAGGCAGATGA'
@@ -173,10 +218,6 @@ def dnds( seq1, seq2, msCorrect='approximate', sliding=False, windowLength=3, st
 # msCorrect='exact', MATLAB gives: dN/dS=0.0221=dnds(seq1,seq2, 'geneticCode', 1, 'Method', 'NG'). This is a huge error, an order of magnitude off. 
 # seq1 = 'ATGCGCAAATACTCCCCCTTCCGAAATGGATACATGGAACCCACCCTTGGGCAGCACCTCCCAACCCTGTCTTTTCCAGACCCCGGACTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGGCTCCGTTGTCTGCATGTACCTCTACCAGCTTTCCCCCCCCATCACCTGGCCCCTCCTGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAACGAATAGAAAAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTGCCCACCACCCTTTTCCAGCCTGCTAGGGCACCCGTCACGCTGACAGCCTGGCAAAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGATTTCCGGGCCCTGCCCTAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCCTTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCCTCATTTCTACTCTCACACGGCCTCATACAGTACTCTTCCTTTCATAATTTGCATCTCCTATTTGAAGAATACACCAACATCCCCATTTCTCTACTTTTTAACGAAAAAGAGGCAGATGACAATGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCTCAGTGAAAAACATTTCCGTGAAACAGAAGTC'
 # seq2 = 'ATGCGCAAGTACTCCCCCTTCCGAAACGGATACATGGAACCCACCCTTGGGCAACACCTCCCAACCCTGTCTTTTCCAGACCCCGGCCTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGACTCTGTTGTCTGCCTGTACCTCTACCAGCTCTCCCCCCCCATCACCTGGCCCCTCCCGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAGCGTATGGAAGAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTACCAACCACCCTTTTCCAGCCTGCTAGGGCCCCCGTCACGTTGACCGCCTGGCAGAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGGTTTCCGGACCCTGCCCCAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCATTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCTTCATTTCTACTCTCACACGGCCTCATACAGTACTCCTCCTTTCACAATTTACATCTCCTTTTTGAAGAATACACCAACATCCCCGTTTCTCTACTTTTTAACGAAAAAGAGGCAAATGACACTGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCCCGCTGAAAAACATTTCCGCGAAACAGAAGTC' 
-
-seq1 = 'CGCAAATACTCCCCCTTCCGAAATGGATACATGGAACCCACCCTTGGGCAGCACCTCCCAACCCTGTCTTTTCCAGACCCCGGACTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGGCTCCGTTGTCTGCATGTACCTCTACCAGCTTTCCCCCCCCATCACCTGGCCCCTCCTGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAACGAATAGAAAAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTGCCCACCACCCTTTTCCAGCCTGCTAGGGCACCCGTCACGCTGACAGCCTGGCAAAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGATTTCCGGGCCCTGCCCTAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCCTTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCCTCATTTCTACTCTCACACGGCCTCATACAGTACTCTTCCTTTCATAATTTGCATCTCCTATTTGAAGAATACACCAACATCCCCATTTCTCTACTTTTTAACGAAAAAGAGGCAGATGACAATGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCTCAGTGAAAAACATTTCCGTGAAACAGAAGTC'
-seq2 = 'ATGCGCAAGTACTCCCCCTTCCGAAACGGATACATGGAACCCACCCTTGGGCAACACCTCCCAACCCTGTCTTTTCCAGACCCCGGCCTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGACTCTGTTGTCTGCCTGTACCTCTACCAGCTCTCCCCCCCCATCACCTGGCCCCTCCCGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAGCGTATGGAAGAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTACCAACCACCCTTTTCCAGCCTGCTAGGGCCCCCGTCACGTTGACCGCCTGGCAGAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGGTTTCCGGACCCTGCCCCAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCATTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCTTCATTTCTACTCTCACACGGCCTCATACAGTACTCCTCCTTTCACAATTTACATCTCCTTTTTGAAGAATACACCAACATCCCCGTTTCTCTACTTTTTAACGAAAAAGAGGCAAATGACACTGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCCCGCTGAAAAACATTTCCGCGAAACAGAA' 
-
 # dnds('ATGCGCAAATACTCCCCCTTCCGAAATGGATACATGGAACCCACCCTTGGGCAGCACCTCCCAACCCTGTCTTTTCCAGACCCCGGACTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGGCTCCGTTGTCTGCATGTACCTCTACCAGCTTTCCCCCCCCATCACCTGGCCCCTCCTGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAACGAATAGAAAAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTGCCCACCACCCTTTTCCAGCCTGCTAGGGCACCCGTCACGCTGACAGCCTGGCAAAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGATTTCCGGGCCCTGCCCTAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCCTTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCCTCATTTCTACTCTCACACGGCCTCATACAGTACTCTTCCTTTCATAATTTGCATCTCCTATTTGAAGAATACACCAACATCCCCATTTCTCTACTTTTTAACGAAAAAGAGGCAGATGACAATGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCTCAGTGAAAAACATTTCCGTGAAACAGAAGTC', 'ATGCGCAAGTACTCCCCCTTCCGAAACGGATACATGGAACCCACCCTTGGGCAACACCTCCCAACCCTGTCTTTTCCAGACCCCGGCCTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGACTCTGTTGTCTGCCTGTACCTCTACCAGCTCTCCCCCCCCATCACCTGGCCCCTCCCGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAGCGTATGGAAGAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTACCAACCACCCTTTTCCAGCCTGCTAGGGCCCCCGTCACGTTGACCGCCTGGCAGAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGGTTTCCGGACCCTGCCCCAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCATTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCTTCATTTCTACTCTCACACGGCCTCATACAGTACTCCTCCTTTCACAATTTACATCTCCTTTTTGAAGAATACACCAACATCCCCGTTTCTCTACTTTTTAACGAAAAAGAGGCAAATGACACTGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCCCGCTGAAAAACATTTCCGCGAAACAGAAGTC')
 
 # ////
@@ -186,18 +227,13 @@ seq2 = 'ATGCGCAAGTACTCCCCCTTCCGAAACGGATACATGGAACCCACCCTTGGGCAACACCTCCCAACCCTGTCT
 # seq2 = 'ATGCGCATGTGGAATTAGAGGCGAAGTACGATCCCTAGACCGACGTACGATGCAACTGTGTGGATGTGACGAGCTTCTTTTATATGCTTCGCCCGCCGGACCGGCCTCGGCATGGCGTAGCAGTGCACAAGCAAATGACAATTAACCACCGTGTATTCGTTATAACATCAGGCAGTTTAAGTCGGGACAATAGGAGCCGCAATACACAGTTTACCGCATCTTGACCTAACTGACATACTGCCATGGACGACTAGCCATGCCACTGGCTCTTAGATAGCCCGATACAGTGATTATGAAAGGTTT' 
 
 
-
-
-
-
-
 # Note: msCorrect="aproximate"
 #dnds_sliding = dnds( seq1,seq2, msCorrect='approximate', sliding=True, windowLength=50, stepLength=1 )
 
 # # Note: msCorrext="exact"
 # dnds_sliding = dnds( seq1,seq2, msCorrect='exact', sliding=True, windowLength=50, stepLength=1 )
 
-dnds_whole = dnds( seq1,seq2, msCorrect='approximate', sliding=False )
+# dnds_whole = dnds( seq1,seq2, msCorrect='approximate', sliding=False )
 
 #dnds_sliding
 
@@ -217,3 +253,70 @@ dnds_whole = dnds( seq1,seq2, msCorrect='approximate', sliding=False )
 # dN = d()
 # dS = d()
 
+if __name__ == "__main__":
+
+    # 
+    # TRY CACHED DATA:
+    #   Open dictionaries that have cached computationally intensively 
+    #   produced results 
+    #
+    try:
+    # LOAD CACHED (fast)
+
+        #
+        # Unpickle codonPair-to-statistics dictionaries
+        #
+        f1 = open('./py/data/observed_changes_dict.p','rb')
+        observed_changes  = pickle.load(f1)
+        f1.close()
+
+        f2 = open('./py/data/potential_changes_dict.p','rb')
+        potential_changes = pickle.load(f2)
+        f2.close()
+        print "LOADED!!" # @TODO:REMOVE
+    except IOError:
+    # CREATE NEW (slow)
+
+        #
+        # Create dictionary of codon (DNA-triplet, e.g. "ATG") -to- amino 
+        #   acid residue (e.g. "M")
+        #
+        nt_to_aa_dict     = codon_pair_data.geneticCode("standard")
+
+        # @TODO:Urgent:debug: why does the following two lines lead to silent error? For some reason I HAVE to pickle the data to get it to work... when I just return the dicts directly I get the wrong dN/dS values.
+        # observed_changes  = codon_pair_data.potential_changes_dict(nt_to_aa_dict)
+        # potential_changes = codon_pair_data.observed_changes_dict(nt_to_aa_dict)
+
+        #
+        # Create the cached codonPair-to-statistics dictionaries, then pickle
+        #
+        codon_pair_data.potential_changes_dict(nt_to_aa_dict)
+        codon_pair_data.observed_changes_dict(nt_to_aa_dict)
+
+        #
+        # Unpickle codonPair-to-statistics dictionaries
+        #
+        f1 = open('./py/data/observed_changes_dict.p','rb') # @TODO:coderedundancey = bad, wrap these lines into a function and call the function
+        observed_changes  = pickle.load(f1)
+        f1.close()
+
+        f2 = open('./py/data/potential_changes_dict.p','rb')
+        potential_changes = pickle.load(f2)
+        f2.close()
+        print "CREATED!!" # @TODO:REMOVE
+
+    #
+    #  Calculate dN/dS
+    #
+
+    # @TODO: These are either taken as cmd input args or from a tmp file
+    s1 = 'CGCAAATACTCCCCCTTCCGAAATGGATACATGGAACCCACCCTTGGGCAGCACCTCCCAACCCTGTCTTTTCCAGACCCCGGACTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGGCTCCGTTGTCTGCATGTACCTCTACCAGCTTTCCCCCCCCATCACCTGGCCCCTCCTGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAACGAATAGAAAAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTGCCCACCACCCTTTTCCAGCCTGCTAGGGCACCCGTCACGCTGACAGCCTGGCAAAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGATTTCCGGGCCCTGCCCTAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCCTTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCCTCATTTCTACTCTCACACGGCCTCATACAGTACTCTTCCTTTCATAATTTGCATCTCCTATTTGAAGAATACACCAACATCCCCATTTCTCTACTTTTTAACGAAAAAGAGGCAGATGACAATGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCTCAGTGAAAAACATTTCCGTGAAACAGAAATG'
+    s2 = 'ATGCGCAAGTACTCCCCCTTCCGAAACGGATACATGGAACCCACCCTTGGGCAACACCTCCCAACCCTGTCTTTTCCAGACCCCGGCCTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGACTCTGTTGTCTGCCTGTACCTCTACCAGCTCTCCCCCCCCATCACCTGGCCCCTCCCGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAGCGTATGGAAGAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTACCAACCACCCTTTTCCAGCCTGCTAGGGCCCCCGTCACGTTGACCGCCTGGCAGAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGGTTTCCGGACCCTGCCCCAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCATTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCTTCATTTCTACTCTCACACGGCCTCATACAGTACTCCTCCTTTCACAATTTACATCTCCTTTTTGAAGAATACACCAACATCCCCGTTTCTCTACTTTTTAACGAAAAAGAGGCAAATGACACTGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCCCGCTGAAAAACATTTCCGCGAAACAGAA' 
+
+    dnds_whole = dnds( s1, s2, potential_changes, observed_changes, msCorrect='approximate', sliding=False)
+
+    # @TODO: work with the sliding window version instead of dnds_whole
+
+    #dnds_whole = dnds( seq1, seq2, msCorrect='approximate', sliding=False )
+
+    print "dN/dS: "+str(dnds_whole)
