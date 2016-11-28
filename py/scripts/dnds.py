@@ -283,18 +283,18 @@ if __name__ == "__main__":
         #
         nt_to_aa_dict     = codon_pair_data.geneticCode("standard")
 
-        #@TODO:Urgent:debug:2016-11-28: why does the following two lines lead to silent error? For some reason I HAVE to pickle the data to get it to work... when I just return the dicts directly I get the wrong dN/dS values.
+        #@TODO:Urgent:debug:2016-11-28: why does the following two lines lead to silent error? For some reason I HAVE to pickle the data to get it to work... when I just return the dicts directly I get the wrong dN/dS values. The following two lines illustrate this, when uncommented in place of the "# @2:Create" and "# @2:Unpickle" blocks of code...
         # observed_changes  = codon_pair_data.potential_changes_dict(nt_to_aa_dict)
         # potential_changes = codon_pair_data.observed_changes_dict(nt_to_aa_dict)
 
         #
-        # Create the cached codonPair-to-statistics dictionaries, then pickle
+        # @2:Create the cached codonPair-to-statistics dictionaries, then pickle
         #
         codon_pair_data.potential_changes_dict(nt_to_aa_dict)
         codon_pair_data.observed_changes_dict(nt_to_aa_dict)
 
         #
-        # Unpickle codonPair-to-statistics dictionaries
+        # @2:Unpickle codonPair-to-statistics dictionaries
         #
         f1 = open('./py/data/observed_changes_dict.p','rb') # @TODO:coderedundancey = bad, wrap these lines into a function and call the function
         observed_changes  = pickle.load(f1)
