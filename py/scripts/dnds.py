@@ -126,12 +126,12 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
     list_Nd = changes_all['observed']['N']
 
     if sliding:
-        # STATS per WINDOW
+        # STATS for each WINDOW seq
         intervals    = range(0,len(codons_paired)-windowLength+1,stepLength)
         windows      = zip(intervals,[i + windowLength - 1 for i in intervals]) 
         window_stats = {}
 
-        for window in windows:
+        for window_i,window in enumerate(windows):
             start = window[0]
             end   = window[1]+1
             window_stats[window] = {    'S':sum(list_S[start:end]),
@@ -158,12 +158,15 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
                     dS = pS
                 window_stats[window]['dNdS'] = dN/dS
             # @TODO: I'm not sure I'm treating the following exceptions in the right way...
-            # technically it woud be best so exclude these from downstream analyses? 
+            # technically it woud be best to exclude these from downstream analyses? 
             # e.g. missing value/datapoint on a plot of dN/dS (y-axis) vs. window interval (x-axis)
-            except ValueError:
-                window_stats[window]['dNdS'] = None
             except ZeroDivisionError:
+                warnings.warn("Approximate multiple-substitutions correction cannot be achieved, for window:"+str(window_i)+", dS is zero, leading to a division error when trying dN/dS... try alternative value for argument: msCorrect (e.g. 'exact') OR alternative value for argument: windowLength (e.g. "+str(windowLength+20)+") ...") # @latest
                 window_stats[window]['dNdS'] = float('Inf')
+            except ValueError:
+                warnings.warn("Approximate multiple-substitutions correction cannot be achieved, for window:"+str(window_i)+",  SYNONYMOUS changes per synonymous site, pS>=3/4, log() operation will yeild return undefined... try alternative value for argument: msCorrect (e.g. 'exact') OR alternative value for argument: windowLength (e.g. "+str(windowLength+20)+") ...") # @latest
+                window_stats[window]['dNdS'] = float('nan')
+
         return window_stats
     else:
         # STATS for WHOLE SEQ
@@ -179,7 +182,7 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
 
             if (pS>=3./4.):
                 pdb.set_trace()
-                raise ValueError("Approximate multiple-substitutions correction cannot be achieved, SYNONYMOUS changes per synonymous site, pS>=3/4, try alternative value for argument: msCorrect...") 
+                raise ValueError("Approximate multiple-substitutions correction cannot be achieved, SYNONYMOUS changes per synonymous site, pS>=3/4, log() operation will yeild return undefined... try alternative value for argument: msCorrect (e.g. 'exact') OR alternative value for argument: windowLength (e.g. "+str(windowLength+20)+") ...") 
 
             if (pN>=3./4.):
                 pdb.set_trace()
@@ -314,15 +317,11 @@ if __name__ == "__main__":
     s2 = 'ATGCGCAAGTACTCCCCCTTCCGAAACGGATACATGGAACCCACCCTTGGGCAACACCTCCCAACCCTGTCTTTTCCAGACCCCGGCCTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGACTCTGTTGTCTGCCTGTACCTCTACCAGCTCTCCCCCCCCATCACCTGGCCCCTCCCGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAGCGTATGGAAGAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTACCAACCACCCTTTTCCAGCCTGCTAGGGCCCCCGTCACGTTGACCGCCTGGCAGAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGGTTTCCGGACCCTGCCCCAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCATTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCTTCATTTCTACTCTCACACGGCCTCATACAGTACTCCTCCTTTCACAATTTACATCTCCTTTTTGAAGAATACACCAACATCCCCGTTTCTCTACTTTTTAACGAAAAAGAGGCAAATGACACTGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCCCGCTGAAAAACATTTCCGCGAAACAGAA'
 
 
-
-    dnds_whole = dnds( s1, s2, potential_changes, observed_changes, msCorrect='approximate', sliding=False)
+    # @NOTE:uncomment below to achieve dnds of 0.15.. or 0.164 if using exact method, interestingly 
+    # dnds_whole = dnds( s1, s2, potential_changes, observed_changes, msCorrect='approximate', sliding=False)
 
     # @TODO: work with the sliding window version instead of dnds_whole
 
-    #dnds_whole = dnds( seq1, seq2, msCorrect='approximate', sliding=False )
+    dnds_whole = dnds( s1, s2, potential_changes, observed_changes, msCorrect='approximate', sliding=False )
 
     print "dN/dS: "+str(dnds_whole)
-
-    for name, val in locals().iteritems():
-        if __builtins__[name] != val:
-            print("{} was overwritten!".format(name)) 
