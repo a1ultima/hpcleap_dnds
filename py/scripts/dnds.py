@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+
+
 """
 
 Calculate dN/dS using Nei Gojobori method with Juke-Cantor's multiple-substitution correction (optional), and whole sequence or sliding window. Tested against MATLAB's dnds().
@@ -18,7 +20,7 @@ REQUIREMENTS:
 
     data:
 
-        observed_changes.p, potential_changes.p: returned by changes.py
+        - observed_changes.p, potential_changes.p: returned by changes.py
         seq1, seq2: @TODO: make cmd or file input arg
 
 """
@@ -31,6 +33,9 @@ import math
 import changes as codon_pair_data
 import warnings
 import pdb
+
+
+# @todo: make a check to ensure the input seqs are divisible by 3 (i.e. n_aa_residues = n_dna_residues/3)
 
 # @TODO:REMOVE: \/ and \/\/
 # with open('../data/observed_changes_dict.p','rb') as f_observed:
@@ -131,9 +136,17 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
         windows      = zip(intervals,[i + windowLength - 1 for i in intervals]) 
         window_stats = {}
 
+        window_stats_list = []
+
+        #pdb.set_trace()  # @TODO: test against matlab's sliding window, also @TODO: find out what stepLength does, @TODO: try to plot the sliding window version
+
         for window_i,window in enumerate(windows):
+
             start = window[0]
             end   = window[1]+1
+
+            #print "from: "+str(start)+"  to: "+str(end)
+
             window_stats[window] = {    'S':sum(list_S[start:end]),
                                         'Sd':sum(list_Sd[start:end]),
                                         'N': sum(list_N[start:end]),
@@ -144,7 +157,6 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
 
             try:
                 if msCorrect=='approximate':
-                    #print "cow holy"
                     dN = -(3./4.)*math.log(1.-(4./3.)*pN)
                     dS = -(3./4.)*math.log(1.-(4./3.)*pS)
 
@@ -153,21 +165,23 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
                 #     d=ln(1-p*4/3)/ln(1-3/(4*N))
 
                 else: # msCorrect=='????'  # @TODO: is this the exact one? Or something else?
-                    #print "holy cow"
                     dN = pN
                     dS = pS
                 window_stats[window]['dNdS'] = dN/dS
+                window_stats_list.append(dN/dS)
             # @TODO: I'm not sure I'm treating the following exceptions in the right way...
             # technically it woud be best to exclude these from downstream analyses? 
             # e.g. missing value/datapoint on a plot of dN/dS (y-axis) vs. window interval (x-axis)
             except ZeroDivisionError:
-                warnings.warn("Approximate multiple-substitutions correction cannot be achieved, for window:"+str(window_i)+", dS is zero, leading to a division error when trying dN/dS... try alternative value for argument: msCorrect (e.g. 'exact') OR alternative value for argument: windowLength (e.g. "+str(windowLength+20)+") ...") # @latest
+                warnings.warn("Approximate multiple-substitutions correction cannot be achieved, for window: "+str(window_i)+", dS is zero, leading to a division error when trying dN/dS... try alternative value for argument: msCorrect (e.g. 'exact') OR alternative value for argument: windowLength (e.g. "+str(windowLength+20)+") ...")
                 window_stats[window]['dNdS'] = float('Inf')
+                window_stats_list.append(float('Inf'))
             except ValueError:
-                warnings.warn("Approximate multiple-substitutions correction cannot be achieved, for window:"+str(window_i)+",  SYNONYMOUS changes per synonymous site, pS>=3/4, log() operation will yeild return undefined... try alternative value for argument: msCorrect (e.g. 'exact') OR alternative value for argument: windowLength (e.g. "+str(windowLength+20)+") ...") # @latest
+                warnings.warn("Approximate multiple-substitutions correction cannot be achieved, for window: "+str(window_i)+",  SYNONYMOUS changes per synonymous site, pS>=3/4, log() operation will yeild return undefined... try alternative value for argument: msCorrect (e.g. 'exact') OR alternative value for argument: windowLength (e.g. "+str(windowLength+20)+") ...") # @latest
                 window_stats[window]['dNdS'] = float('nan')
+                window_stats_list.append(float('nan'))
 
-        return window_stats
+        return window_stats_list,window_stats  # list of dnds per window interval // dict of dnds, key=(<from #base pair>,<to #base pair>), value=<dN/dS of the window specified in the key>
     else:
         # STATS for WHOLE SEQ
         S   = sum(list_S)
@@ -177,38 +191,33 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
         Nd  = sum(list_Nd)
         pN  = Nd/N
 
-        if msCorrect=='approximate':
-            #print "cow holy (whole)"
+        try:
+            if msCorrect=='approximate':
 
-            if (pS>=3./4.):
-                pdb.set_trace()
-                raise ValueError("Approximate multiple-substitutions correction cannot be achieved, SYNONYMOUS changes per synonymous site, pS>=3/4, log() operation will yeild return undefined... try alternative value for argument: msCorrect (e.g. 'exact') OR alternative value for argument: windowLength (e.g. "+str(windowLength+20)+") ...") 
+                if (pS>=3./4.):
+                    raise ValueError("Approximate multiple-substitutions correction cannot be achieved, SYNONYMOUS changes per synonymous site, pS>=3/4, log() operation will yeild return undefined. Try alternative value for argument: msCorrect (e.g. 'exact')...") 
 
-            if (pN>=3./4.):
-                pdb.set_trace()
-                raise ValueError("Approximate multiple-substitutions correction cannot be achieved, NON-SYNONYMOUS changes per synonymous site, pN>=3/4, try alternative value for argument: msCorrect...") 
+                if (pN>=3./4.):
+                    raise ValueError("Approximate multiple-substitutions correction cannot be achieved, NON-SYNONYMOUS changes per synonymous site, pN>=3/4, log() operation will yeild return undefined. Try alternative value for argument: msCorrect (e.g. 'exact')...") 
 
-            # @TODO: if the proportion of syn is >3/4 it might break
-            try:
                 dS  = -(3./4.)*math.log(1.-((4./3.)*pS))
                 dN  = -(3./4.)*math.log(1.-((4./3.)*pN))
                 dN_dS = dN/dS
-            except ValueError:
-                warnings.warn("ValueError: Approximate multiple-substitutions correction cannot be achieved: UNKNOWN reason, probably due to illegal numbers in a log() function...") 
-                dN_dS = float("nan")
-                return dN_dS
-            except ZeroDivisionError:
-                warnings.warn("ZeroDiviSionError: Approximate multiple-substitutions correction cannot be achieved: UNKNOWN reason, probably due to illegal numbers in a log() function...") 
-                dN_dS = float('Inf')
-                return dN_dS
 
-        else: # @TODO: is this the exact one? Or something else? 
-            #print "holy cow (whole)"
-            dS  = pS  # i.e. dS = Sd/S
-            dN  = pN
-            dN_dS = dN/dS
-
-        #print "dN/dS: "+str(dN/dS)
+            else: # @TODO: is this the exact one? Or something else? 
+                
+                # @DONE: one day the following three lines of code will error, giving a ZeroDivisionError, this needs to be handled with try
+                dS  = pS  # i.e. dS = Sd/S
+                dN  = pN
+                dN_dS = dN/dS
+        except ValueError:
+            warnings.warn("ValueError: Approximate multiple-substitutions correction cannot be achieved: UNKNOWN reason, probably due to illegal numbers in a log() function...") 
+            dN_dS = float("nan")
+            return dN_dS
+        except ZeroDivisionError:
+            warnings.warn("ZeroDiviSionError: Approximate multiple-substitutions correction cannot be achieved: UNKNOWN reason, probably due to illegal numbers in a log() function...") 
+            dN_dS = float('Inf')
+            return dN_dS
 
         return dN_dS  # i.e. omega = dN/dS = (Nd/N)/(Sd/S)
 
@@ -286,9 +295,14 @@ if __name__ == "__main__":
         #
         nt_to_aa_dict     = codon_pair_data.geneticCode("standard")
 
-        #@TODO:Urgent:debug:2016-11-28: why does the following two lines lead to silent error? For some reason I HAVE to pickle the data to get it to work... when I just return the dicts directly I get the wrong dN/dS values. The following two lines illustrate this, when uncommented in place of the "# @2:Create" and "# @2:Unpickle" blocks of code...
+
+        # alternative 1 {{ 
+
+        # #@TODO:Urgent:debug:2016-11-28: why does the following two lines (commented) lead to silent error? For some reason I HAVE to pickle the data to get it to work... when I just return the dicts directly I get the wrong dN/dS values. The following two lines illustrate this, when uncommented in place of the "# @2:Create" and "# @2:Unpickle" blocks of code...
         # observed_changes  = codon_pair_data.potential_changes_dict(nt_to_aa_dict)
         # potential_changes = codon_pair_data.observed_changes_dict(nt_to_aa_dict)
+
+        # }} 1 alternative 2 {{
 
         #
         # @2:Create the cached codonPair-to-statistics dictionaries, then pickle
@@ -306,6 +320,9 @@ if __name__ == "__main__":
         f2 = open('./py/data/potential_changes_dict.p','rb')
         potential_changes = pickle.load(f2)
         f2.close()
+
+        # }} alternative 2
+
         print "CREATED!!" # @TODO:REMOVE
 
     #
@@ -313,15 +330,20 @@ if __name__ == "__main__":
     #
 
     # @TODO: These are either taken as cmd input args or from a tmp file
-    s1 = 'CGCAAATACTCCCCCTTCCGAAATGGATACATGGAACCCACCCTTGGGCAGCACCTCCCAACCCTGTCTTTTCCAGACCCCGGACTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGGCTCCGTTGTCTGCATGTACCTCTACCAGCTTTCCCCCCCCATCACCTGGCCCCTCCTGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAACGAATAGAAAAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTGCCCACCACCCTTTTCCAGCCTGCTAGGGCACCCGTCACGCTGACAGCCTGGCAAAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGATTTCCGGGCCCTGCCCTAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCCTTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCCTCATTTCTACTCTCACACGGCCTCATACAGTACTCTTCCTTTCATAATTTGCATCTCCTATTTGAAGAATACACCAACATCCCCATTTCTCTACTTTTTAACGAAAAAGAGGCAGATGACAATGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCTCAGTGAAAAACATTTCCGTGAAACAGAAATG'
+    s1 = 'ATGCGCAAATACTCCCCCTTCCGAAATGGATACATGGAACCCACCCTTGGGCAGCACCTCCCAACCCTGTCTTTTCCAGACCCCGGACTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGGCTCCGTTGTCTGCATGTACCTCTACCAGCTTTCCCCCCCCATCACCTGGCCCCTCCTGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAACGAATAGAAAAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTGCCCACCACCCTTTTCCAGCCTGCTAGGGCACCCGTCACGCTGACAGCCTGGCAAAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGATTTCCGGGCCCTGCCCTAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCCTTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCCTCATTTCTACTCTCACACGGCCTCATACAGTACTCTTCCTTTCATAATTTGCATCTCCTATTTGAAGAATACACCAACATCCCCATTTCTCTACTTTTTAACGAAAAAGAGGCAGATGACAATGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCTCAGTGAAAAACATTTCCGTGAAACAGAA'
     s2 = 'ATGCGCAAGTACTCCCCCTTCCGAAACGGATACATGGAACCCACCCTTGGGCAACACCTCCCAACCCTGTCTTTTCCAGACCCCGGCCTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGACTCTGTTGTCTGCCTGTACCTCTACCAGCTCTCCCCCCCCATCACCTGGCCCCTCCCGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAGCGTATGGAAGAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTACCAACCACCCTTTTCCAGCCTGCTAGGGCCCCCGTCACGTTGACCGCCTGGCAGAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGGTTTCCGGACCCTGCCCCAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCATTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCTTCATTTCTACTCTCACACGGCCTCATACAGTACTCCTCCTTTCACAATTTACATCTCCTTTTTGAAGAATACACCAACATCCCCGTTTCTCTACTTTTTAACGAAAAAGAGGCAAATGACACTGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCCCGCTGAAAAACATTTCCGCGAAACAGAA'
 
 
     # @NOTE:uncomment below to achieve dnds of 0.15.. or 0.164 if using exact method, interestingly 
-    # dnds_whole = dnds( s1, s2, potential_changes, observed_changes, msCorrect='approximate', sliding=False)
+    dnds_whole = dnds( s1, s2, potential_changes, observed_changes, msCorrect='approximate', sliding=False)
+    print "dN/dS: "+str(dnds_whole)
 
     # @TODO: work with the sliding window version instead of dnds_whole
 
-    dnds_whole = dnds( s1, s2, potential_changes, observed_changes, msCorrect='approximate', sliding=False )
+    # dnds_slide_list, dnds_slide_dict = dnds( s1, s2, potential_changes, observed_changes, msCorrect='approximate', sliding=True, windowLength=50, stepLength=1 )
 
-    print "dN/dS: "+str(dnds_whole)
+    # with open("./py/data/dnds_slide_dict.p","w") as fo:
+    #     pickle.dump(dnds_slide_dict, fo)
+    #print dnds_slide_list 
+
+    
