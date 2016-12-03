@@ -21,7 +21,7 @@ REQUIREMENTS:
     data:
 
         - observed_changes.p, potential_changes.p: returned by changes.py
-        seq1, seq2: @TODO: make cmd or file input arg
+        seq1, seq2: @todo: make cmd or file input arg
 
 """
 ############
@@ -33,16 +33,18 @@ import math
 import changes as codon_pair_data
 import warnings
 import pdb
+import time 
 
+start_time = time.time()
 
 # @todo: make a check to ensure the input seqs are divisible by 3 (i.e. n_aa_residues = n_dna_residues/3)
 
-# @TODO:REMOVE: \/ and \/\/
+# @todo:REMOVE: \/ and \/\/
 # with open('../data/observed_changes_dict.p','rb') as f_observed:
 #     changes_observed = pickle.load(f_observed)
 
 
-# @TODO:REMOVE: \/ and \/\/: the final script cannot use absolut paths, note: the path from which this script is executed is where current working directory is, in this case it should be a .html that is in {root} calling this script residing in {root}/scripts directory
+# @todo:REMOVE: \/ and \/\/: the final script cannot use absolut paths, note: the path from which this script is executed is where current working directory is, in this case it should be a .html that is in {root} calling this script residing in {root}/scripts directory
  # changes_observed = pickle.load(open('/home/qiime/Desktop/hpcleap_wp6_compbio/hpcleap_bioinf/data/observed_changes_dict.p','rb'))
 # changes_potential= pickle.load(open('/home/qiime/Desktop/hpcleap_wp6_compbio/hpcleap_bioinf/data/potential_changes_dict.p','rb'))
 
@@ -52,20 +54,14 @@ import pdb
 #############
 
 
-
-def chunks(l, n):
-    """ Yield successive n-sized chunks from l. """
-    for i in xrange(0, len(l), n):
-        yield l[i:i+n]
-
 def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximate', sliding=False, windowLength=3, stepLength=1):
-    """ Perform dN/dS analysis, using the 'NG' algoritm, includes both whole sequence or sliding window, and either an approximate or exact multiple-substiution correction method. (@TODO: make sure it actually is exact... it could be
+    """ Perform dN/dS analysis, using the 'NG' algoritm, includes both whole sequence or sliding window, and either an approximate or exact multiple-substiution correction method. (@todo: make sure it actually is exact... it could be
              something else)
             
 
     ARGS:
         seq1,  a DNA sequence as string of letters, AGTC. Seq1 must be equal in length 
-            to, and aligned with, seq2, with gaps trimmed away. @TODO: how on earth can 
+            to, and aligned with, seq2, with gaps trimmed away. @todo: how on earth can 
             we reliably make this work on the web service?
             
             e.g. seq1 = 'ATGCGCAAATACTCCCCCTTCCGAAATGGATACATGGAACCCACCCTTGGGCAGCACCTCCCAACCCTGTCTTTTCCAGACCCCGGACTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGGCTCCGTTGTCTGCATGTACCTCTACCAGCTTTCCCCCCCCATCACCTGGCCCCTCCTGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAACGAATAGAAAAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTGCCCACCACCCTTTTCCAGCCTGCTAGGGCACCCGTCACGCTGACAGCCTGGCAAAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGATTTCCGGGCCCTGCCCTAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCCTTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCCTCATTTCTACTCTCACACGGCCTCATACAGTACTCTTCCTTTCATAATTTGCATCTCCTATTTGAAGAATACACCAACATCCCCATTTCTCTACTTTTTAACGAAAAAGAGGCAGATGACAATGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCTCAGTGAAAAACATTTCCGTGAAACAGAAGTC'
@@ -80,10 +76,10 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
 
             e.g. changes.potential_changes_dict(...)  (see: ./changes.py)
 
-        changes_observed, @TODO
+        changes_observed, @todo
 
         msCorrect, a string to toggle between multiple-substitution correction methods:
-            "approximate", "exact" (@TODO: make sure it actually is exact... it could be
+            "approximate", "exact" (@todo: make sure it actually is exact... it could be
              something else)
             
             e.g. msCorrect = 'approximate'
@@ -93,9 +89,13 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
             
             e.g. sliding = False
 
-        windowLength, an integer specifying the width of the sliding window, measured in DNA basepairs, from 1-to-length(seq1)
+        windowLength, an integer specifying the width of the sliding window, measured in no. of codons in the window to measure dN/dS over, from 1-to-length(seq1)
             
             e.g. windowLength = 50
+
+        stepLength, an integer specifying no. of codons to shift the sliding window with each iteration. If stepLength < windowLength then windows will overlap, overlapping is dealt with prior to plotting (acts to smooth values, averages along the overlaps are taken as a dN/dS value for any codon).
+
+            e.g. stepLength = 1
 
     NOTES:
 
@@ -105,15 +105,20 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
 
     """
 
+    def chunks(l, n):
+        """ Yield successive n-sized chunks from l. """
+        for i in xrange(0, len(l), n):
+            yield l[i:i+n]
+
     # TODO: stop codons to deal with, reject
     # TODO: ambiguous bases to deal with: gaps, Ns, Xs
 
     # STATS per CODON-PAIR:
     codons_seq1   = [codon for codon in chunks(seq1,3)]  #splits
     codons_seq2   = [codon for codon in chunks(seq2,3)]  #splits
-    codons_paired = [pair for pair in zip(codons_seq1,codons_seq2) if (len(pair[0])+len(pair[1]))==6] # aligned codons are paired into tuples, excess codons are truncated
+    codons_paired = [pair for pair in zip(codons_seq1,codons_seq2) if (len(pair[0])+len(pair[1]))==6] # aligned codons are paired into tuples, excess codons are truncated, @todo: in main example, we lose 5 bps of data
 
-    # @TODO: the next for loop is extremely innefficient, I should set the structure of the changes_potential and changes_observed dicts to how I want it to look, a priori, i.e. when it's instantiated in changes.py. 
+    # @todo: the next for loop is extremely innefficient, I should set the structure of the changes_potential and changes_observed dicts to how I want it to look, a priori, i.e. when it's instantiated in changes.py. 
     # OR just remove this chunk and access the data as they come in the args
 
     changes_all = {'observed':{'S':[],'N':[]},'potential':{'S':[],'N':[]}}
@@ -134,11 +139,15 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
         # STATS for each WINDOW seq
         intervals    = range(0,len(codons_paired)-windowLength+1,stepLength)
         windows      = zip(intervals,[i + windowLength - 1 for i in intervals]) 
+
+
+        #pdb.set_trace()
+
         window_stats = {}
 
         window_stats_list = []
 
-        #pdb.set_trace()  # @TODO: test against matlab's sliding window, also @TODO: find out what stepLength does, @TODO: try to plot the sliding window version
+        #pdb.set_trace()  # @todo: test against matlab's sliding window, also @todo: find out what stepLength does, @todo: try to plot the sliding window version
 
         for window_i,window in enumerate(windows):
 
@@ -160,16 +169,16 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
                     dN = -(3./4.)*math.log(1.-(4./3.)*pN)
                     dS = -(3./4.)*math.log(1.-(4./3.)*pS)
 
-                # @TODO: what is this commented code? I don't remember...
+                # @todo: what is this commented code? I don't remember...
                 # elif msCorrect=='exact':
                 #     d=ln(1-p*4/3)/ln(1-3/(4*N))
 
-                else: # msCorrect=='????'  # @TODO: is this the exact one? Or something else?
+                else: # msCorrect=='????'  # @todo: is this the exact one? Or something else?
                     dN = pN
                     dS = pS
                 window_stats[window]['dNdS'] = dN/dS
                 window_stats_list.append(dN/dS)
-            # @TODO: I'm not sure I'm treating the following exceptions in the right way...
+            # @todo: I'm not sure I'm treating the following exceptions in the right way...
             # technically it woud be best to exclude these from downstream analyses? 
             # e.g. missing value/datapoint on a plot of dN/dS (y-axis) vs. window interval (x-axis)
             except ZeroDivisionError:
@@ -204,7 +213,7 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
                 dN  = -(3./4.)*math.log(1.-((4./3.)*pN))
                 dN_dS = dN/dS
 
-            else: # @TODO: is this the exact one? Or something else? 
+            else: # @todo: is this the exact one? Or something else? 
                 
                 # @DONE: one day the following three lines of code will error, giving a ZeroDivisionError, this needs to be handled with try
                 dS  = pS  # i.e. dS = Sd/S
@@ -221,6 +230,85 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
 
         return dN_dS  # i.e. omega = dN/dS = (Nd/N)/(Sd/S)
 
+
+def plot_dnds_sliding(dnds_slide_dict):
+
+    """ Plots sliding dN/dS values (y-axis) along the input sequence's aligned codons (x-axis). If the sliding windows overlap (see below), then plot_dnds_sliding will also average the overlapping dN/dS values for each codon. 
+
+        ----     window 1
+         ----    window 2
+          ----   ...
+        ^^^^^^^  take average along each column (codon)
+
+    ARGS:
+        dnds_slide_dict,    the output of dnds() if the 'sliding' optional argument is set to True
+
+            e.g. dnds_slide_dict = dnds( s1, s2, potential_changes, observed_changes, msCorrect='approximate', sliding=True, windowLength=50, stepLength=1 )
+
+    RETURNS:
+        None,   a plot is generated and written to: py/data/dnds_sliding_test.png
+
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+    #import pickle
+
+    # #
+    # # dnds_slide_dict has overlapping windows of dnds calculated, windows overlap by stepLength bps, and are uniformly windowLength wide
+    # #
+    # with open("py/data/dnds_slide_dict.p","r") as fi:
+    #     dnds_slide_dict=pickle.load(fi)
+
+    #window_intervals = sorted(dnds_slide_dict.keys()) # @todo: I dont think sorting the windows will make a difference to final result, but it will make it slower, @todo: test this just in case
+    window_intervals = dnds_slide_dict.keys() # @todo: I dont think sorting the windows will make a difference to final result, but it will make it slower, @todo: test this just in case
+
+    #
+    # vectorize and find max of the window_intervals
+    #
+    max_window_position = np.amax(window_intervals) # e.g. 243 @done: a whole order of magnitude faster than: max_window_interval = max(window_intervals, key=lambda x: x[1])
+    # @todo: ^ doing equivalent operations on np.array() (instead of list) is much faster, so maybe this means we should  np.arrays() in the rest of the code in dnds.py and changes.py
+    # @DONE: Q: would finding the max() be faster than sorting then indexing? A: yes
+
+    #
+    # Initialise matrix with NaN, each row is the values for a specific window, these will cascade 
+    #       and overlap to various degrees depending on stepLength and windowLength
+    #
+
+    # ----     window 1
+    #  ----    window 2
+    #   ----   ...
+    # ^^^^^^^  take average along each column
+    # 
+    overlap_matrix      = np.empty((len(window_intervals),max_window_position+1))  # @todo: are you sure it's +1? initialize empty matrix, note: entries are not actually NaN, just near-zero
+    overlap_matrix[:]   = np.NAN # initiate empty np array with NaN, so later we can mask
+
+    for window_i,window in enumerate(window_intervals):
+
+        start = window[0] # e.g. 0
+        end   = window[1] # e.g. 49 
+
+        # in the i-th row, fill all elements from the window[0]-th to window[1]-th with the dN/dS value for this window
+        overlap_matrix[window_i,start:end+1] = dnds_slide_dict[window]['dNdS'] # @todo: are you sure it's +1? test, keep in mind for these indices it does -1 for the "to" part
+
+    #
+    # Mask all non-finite values, to allow proper plotting
+    #
+    nan_masker              = ~np.isfinite(overlap_matrix) # boolean matrix, True if element is finite, False if element is Inf or NaN
+    overlap_matrix_masked   = np.ma.masked_array(overlap_matrix,mask=nan_masker)
+
+    #
+    # Columwise averages (i.e. avg all values in each column, leading to a 1D vector of averages)
+    #
+    overlap_matrix_avg      = overlap_matrix_masked.mean(axis=0)
+    #overlap_matrix_avg.mean() # sanity: 0.15584966052233765 (whole seq average: 0.152307100775) not bad!
+
+    #
+    # Plot dN/dS along the input sequences
+    #
+    plt.plot(overlap_matrix_avg)
+    # plt.show()
+    plt.savefig("py/data/dnds_sliding_test.png")
+    #avg_matrix = overlap_matrix.mean(axis=1)
 
 # seq1 = 'CTTTTTAACGAAAAAGAGGCAGATGA'
 # seq2 = 'ATGGCCCACTTCCCAGGGTTTGGACA'
@@ -285,7 +373,7 @@ if __name__ == "__main__":
         f2 = open('./py/data/potential_changes_dict.p','rb')
         potential_changes = pickle.load(f2)
         f2.close()
-        print "LOADED!!" # @TODO:REMOVE
+        print "LOADED!!" # @todo:REMOVE
     except IOError:
     # CREATE NEW (slow)
 
@@ -298,7 +386,7 @@ if __name__ == "__main__":
 
         # alternative 1 {{ 
 
-        # #@TODO:Urgent:debug:2016-11-28: why does the following two lines (commented) lead to silent error? For some reason I HAVE to pickle the data to get it to work... when I just return the dicts directly I get the wrong dN/dS values. The following two lines illustrate this, when uncommented in place of the "# @2:Create" and "# @2:Unpickle" blocks of code...
+        # #@todo:Urgent:debug:2016-11-28: why does the following two lines (commented) lead to silent error? For some reason I HAVE to pickle the data to get it to work... when I just return the dicts directly I get the wrong dN/dS values. The following two lines illustrate this, when uncommented in place of the "# @2:Create" and "# @2:Unpickle" blocks of code...
         # observed_changes  = codon_pair_data.potential_changes_dict(nt_to_aa_dict)
         # potential_changes = codon_pair_data.observed_changes_dict(nt_to_aa_dict)
 
@@ -313,7 +401,7 @@ if __name__ == "__main__":
         #
         # @2:Unpickle codonPair-to-statistics dictionaries
         #
-        f1 = open('./py/data/observed_changes_dict.p','rb') # @TODO:coderedundancey = bad, wrap these lines into a function and call the function
+        f1 = open('./py/data/observed_changes_dict.p','rb') # @todo:coderedundancey = bad, wrap these lines into a function and call the function
         observed_changes  = pickle.load(f1)
         f1.close()
 
@@ -323,27 +411,35 @@ if __name__ == "__main__":
 
         # }} alternative 2
 
-        print "CREATED!!" # @TODO:REMOVE
+        print "CREATED!!" # @todo:REMOVE
 
     #
     #  Calculate dN/dS
     #
 
-    # @TODO: These are either taken as cmd input args or from a tmp file
+    # @todo: These are either taken as cmd input args or from a tmp file
     s1 = 'ATGCGCAAATACTCCCCCTTCCGAAATGGATACATGGAACCCACCCTTGGGCAGCACCTCCCAACCCTGTCTTTTCCAGACCCCGGACTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGGCTCCGTTGTCTGCATGTACCTCTACCAGCTTTCCCCCCCCATCACCTGGCCCCTCCTGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAACGAATAGAAAAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTGCCCACCACCCTTTTCCAGCCTGCTAGGGCACCCGTCACGCTGACAGCCTGGCAAAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGATTTCCGGGCCCTGCCCTAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCCTTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCCTCATTTCTACTCTCACACGGCCTCATACAGTACTCTTCCTTTCATAATTTGCATCTCCTATTTGAAGAATACACCAACATCCCCATTTCTCTACTTTTTAACGAAAAAGAGGCAGATGACAATGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCTCAGTGAAAAACATTTCCGTGAAACAGAA'
     s2 = 'ATGCGCAAGTACTCCCCCTTCCGAAACGGATACATGGAACCCACCCTTGGGCAACACCTCCCAACCCTGTCTTTTCCAGACCCCGGCCTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGACTCTGTTGTCTGCCTGTACCTCTACCAGCTCTCCCCCCCCATCACCTGGCCCCTCCCGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAGCGTATGGAAGAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTACCAACCACCCTTTTCCAGCCTGCTAGGGCCCCCGTCACGTTGACCGCCTGGCAGAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGGTTTCCGGACCCTGCCCCAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCATTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCTTCATTTCTACTCTCACACGGCCTCATACAGTACTCCTCCTTTCACAATTTACATCTCCTTTTTGAAGAATACACCAACATCCCCGTTTCTCTACTTTTTAACGAAAAAGAGGCAAATGACACTGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCCCGCTGAAAAACATTTCCGCGAAACAGAA'
 
+    # # @NOTE:uncomment below to achieve dnds of 0.15.. or 0.164 if using exact method, interestingly 
+    # dnds_whole = dnds( s1, s2, potential_changes, observed_changes, msCorrect='exact', sliding=False)
+    # print "dN/dS: "+str(dnds_whole)
 
-    # @NOTE:uncomment below to achieve dnds of 0.15.. or 0.164 if using exact method, interestingly 
-    dnds_whole = dnds( s1, s2, potential_changes, observed_changes, msCorrect='approximate', sliding=False)
-    print "dN/dS: "+str(dnds_whole)
+    # @todo: work with the sliding window version instead of dnds_whole
 
-    # @TODO: work with the sliding window version instead of dnds_whole
-
-    # dnds_slide_list, dnds_slide_dict = dnds( s1, s2, potential_changes, observed_changes, msCorrect='approximate', sliding=True, windowLength=50, stepLength=1 )
+    dnds_slide_list, dnds_slide_dict = dnds( s1, s2, potential_changes, observed_changes, msCorrect='approximate', sliding=True, windowLength=50, stepLength=1 )
 
     # with open("./py/data/dnds_slide_dict.p","w") as fo:
     #     pickle.dump(dnds_slide_dict, fo)
-    #print dnds_slide_list 
+    # #print dnds_slide_list 
 
-    
+    #
+    # Plot the sliding window values
+    #
+    plot_dnds_sliding(dnds_slide_dict)
+
+    # @todo: show the user also the whole dnds value somewhere in the webpage
+
+print "Elapsed time: "+str(time.time() - start_time)    
+
+
