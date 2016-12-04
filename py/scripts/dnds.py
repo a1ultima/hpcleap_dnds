@@ -32,8 +32,10 @@ import pickle
 import math
 import changes as codon_pair_data
 import warnings
-import pdb
 import time 
+#import os.path
+import matplotlib.pyplot as plt
+import numpy as np
 
 start_time = time.time()
 
@@ -110,12 +112,12 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
         for i in xrange(0, len(l), n):
             yield l[i:i+n]
 
-    # TODO: stop codons to deal with, reject
-    # TODO: ambiguous bases to deal with: gaps, Ns, Xs
+    # todo: stop codons to deal with, reject
+    # todo: ambiguous bases to deal with: gaps, Ns, Xs
 
     # STATS per CODON-PAIR:
     codons_seq1   = [codon for codon in chunks(seq1,3)]  #splits
-    codons_seq2   = [codon for codon in chunks(seq2,3)]  #splits
+    codons_seq2   = [codon for codon in chunks(seq2,3)]  
     codons_paired = [pair for pair in zip(codons_seq1,codons_seq2) if (len(pair[0])+len(pair[1]))==6] # aligned codons are paired into tuples, excess codons are truncated, @todo: in main example, we lose 5 bps of data
 
     # @todo: the next for loop is extremely innefficient, I should set the structure of the changes_potential and changes_observed dicts to how I want it to look, a priori, i.e. when it's instantiated in changes.py. 
@@ -140,9 +142,6 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
         intervals    = range(0,len(codons_paired)-windowLength+1,stepLength)
         windows      = zip(intervals,[i + windowLength - 1 for i in intervals]) 
 
-
-        #pdb.set_trace()
-
         window_stats = {}
 
         window_stats_list = []
@@ -160,6 +159,7 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
                                         'Sd':sum(list_Sd[start:end]),
                                         'N': sum(list_N[start:end]),
                                         'Nd':sum(list_Nd[start:end])    }
+
 
             pS = window_stats[window]['Sd']/window_stats[window]['S']
             pN = window_stats[window]['Nd']/window_stats[window]['N']
@@ -249,8 +249,6 @@ def plot_dnds_sliding(dnds_slide_dict):
         None,   a plot is generated and written to: py/data/dnds_sliding_test.png
 
     """
-    import matplotlib.pyplot as plt
-    import numpy as np
     #import pickle
 
     # #
@@ -356,7 +354,8 @@ if __name__ == "__main__":
     #   Open dictionaries that have cached computationally intensively 
     #   produced results 
     #
-    try:
+    try:       
+    #if (os.path.exists("./py/data/observed_changes_dict.p") and os.path.exists("./py/data/potential_changes_dict.p")):
     # LOAD CACHED (fast)
 
         #
@@ -371,6 +370,7 @@ if __name__ == "__main__":
         f2.close()
         print "LOADED!!" # @todo:REMOVE
     except IOError:
+    #else:
     # CREATE NEW (slow)
 
         #
@@ -386,7 +386,7 @@ if __name__ == "__main__":
         # observed_changes  = codon_pair_data.potential_changes_dict(nt_to_aa_dict)
         # potential_changes = codon_pair_data.observed_changes_dict(nt_to_aa_dict)
 
-        # }} 1 alternative 2 {{
+        #}} 1 alternative 2 {{
 
         #
         # @2:Create the cached codonPair-to-statistics dictionaries, then pickle
@@ -417,24 +417,26 @@ if __name__ == "__main__":
     s1 = 'ATGCGCAAATACTCCCCCTTCCGAAATGGATACATGGAACCCACCCTTGGGCAGCACCTCCCAACCCTGTCTTTTCCAGACCCCGGACTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGGCTCCGTTGTCTGCATGTACCTCTACCAGCTTTCCCCCCCCATCACCTGGCCCCTCCTGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAACGAATAGAAAAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTGCCCACCACCCTTTTCCAGCCTGCTAGGGCACCCGTCACGCTGACAGCCTGGCAAAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGATTTCCGGGCCCTGCCCTAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCCTTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCCTCATTTCTACTCTCACACGGCCTCATACAGTACTCTTCCTTTCATAATTTGCATCTCCTATTTGAAGAATACACCAACATCCCCATTTCTCTACTTTTTAACGAAAAAGAGGCAGATGACAATGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCTCAGTGAAAAACATTTCCGTGAAACAGAA'
     s2 = 'ATGCGCAAGTACTCCCCCTTCCGAAACGGATACATGGAACCCACCCTTGGGCAACACCTCCCAACCCTGTCTTTTCCAGACCCCGGCCTCCGGCCCCAAAACCTGTACACCCTCTGGGGAGACTCTGTTGTCTGCCTGTACCTCTACCAGCTCTCCCCCCCCATCACCTGGCCCCTCCCGCCCCATGTGATTTTTTGCCACCCCGGCCAGCTCGGGGCCTTCCTCACCAATGTTCCCTACAAGCGTATGGAAGAACTCCTCTATAAAATTTCCCTTACCACAGGGGCCCTAATAATTCTACCCGAGGACTGTTTACCAACCACCCTTTTCCAGCCTGCTAGGGCCCCCGTCACGTTGACCGCCTGGCAGAACGGCCTCCTTCCGTTCCACTCAACCCTCACCACTCCAGGCCTTATTTGGACATTTACCGATGGCACGCCTATGGTTTCCGGACCCTGCCCCAAAGATGGCCAGCCATCTTTAGTACTACAGTCCTCCTCATTTATATTTCACAAATTTCAAACCAAGGCCTACCACCCTTCATTTCTACTCTCACACGGCCTCATACAGTACTCCTCCTTTCACAATTTACATCTCCTTTTTGAAGAATACACCAACATCCCCGTTTCTCTACTTTTTAACGAAAAAGAGGCAAATGACACTGACCATGAGCCCCAAATATCCCCCGGGGGCTTAGAGCCTCCCGCTGAAAAACATTTCCGCGAAACAGAA'
 
-    # # @NOTE:uncomment below to achieve dnds of 0.15.. or 0.164 if using exact method, interestingly 
-    # dnds_whole = dnds( s1, s2, potential_changes, observed_changes, msCorrect='exact', sliding=False)
-    # print "dN/dS: "+str(dnds_whole)
 
-    # @todo: work with the sliding window version instead of dnds_whole
+    # alternative 1 {{
 
-    dnds_slide_list, dnds_slide_dict = dnds( s1, s2, potential_changes, observed_changes, msCorrect='approximate', sliding=True, windowLength=50, stepLength=1 )
+    # @NOTE:uncomment below to achieve dnds of 0.15.. or 0.164 if using exact method, interestingly 
+    dnds_whole = dnds( s1, s2, potential_changes, observed_changes, msCorrect='approximate', sliding=False)
+    print "dN/dS: "+str(dnds_whole)
 
-    # with open("./py/data/dnds_slide_dict.p","w") as fo:
-    #     pickle.dump(dnds_slide_dict, fo)
-    # #print dnds_slide_list 
+    # }} 1 alternative 2 {{
 
-    #
-    # Plot the sliding window values
-    #
-    plot_dnds_sliding(dnds_slide_dict)
+    # # @DONE: work with the sliding window version instead of dnds_whole
+    # dnds_slide_list, dnds_slide_dict = dnds( s1, s2, potential_changes, observed_changes, msCorrect='approximate', sliding=True, windowLength=50, stepLength=1 )
 
-    # @todo: show the user also the whole dnds value somewhere in the webpage
+    # #
+    # # Plot the sliding window values
+    # #
+    # plot_dnds_sliding(dnds_slide_dict)
+
+    # # @todo: show the user also the whole dnds value somewhere in the webpage
+
+    # }} alternative 2
 
 print "Elapsed time: "+str(time.time() - start_time)    
 

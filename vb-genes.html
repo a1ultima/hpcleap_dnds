@@ -215,7 +215,7 @@
 
                         // Render transcripts
                         json2[0].forEach(function (element) {
-                            html += template.render(element)
+                            html += template.render(element)  // @ANDY:@todo:@bug:seems if you provide a geneId with -PA, e.g. AGAP010815-PA you do not get it's transcripts and instead a protein seq in the Transcripts panel 
                         });
 
                         $('#collapseTwoBody').html(html);
