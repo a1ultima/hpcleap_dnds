@@ -2,7 +2,7 @@
 
 """
 
-@TODO: descriptions etc.
+@todo: descriptions etc.
 
 """
 
@@ -10,7 +10,7 @@
 import numpy as np 
 import pickle
 from  itertools import permutations
-import copy # @TODO: remove the deepcopying?
+import copy # @todo: remove the deepcopying?
 
 # FUNCTION DEFS:
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
@@ -126,7 +126,7 @@ def potential_changes_dict(nt_to_aa):
 
     for pair in codonPairs:
 
-        # @DEUG: non-directional dnds, I think this is causing matlabTest bug? A: turns out not to make much difference, mind-blown
+        # @DEUG:SOLVED: but still, I don't understand why the two alternatives gives such similar values (non-directional dnds, I think this is causing matlabTest bug? A: turns out not to make much difference, mind-blown)
         
         # alternative 1 {{
 
@@ -136,9 +136,12 @@ def potential_changes_dict(nt_to_aa):
         pn2 = potential_changes['N'][codon2]
         ps1 = potential_changes['S'][codon1]
         ps2 = potential_changes['S'][codon2]
+
+        # print str((pn1+pn2)/2.)+" "+str((ps1+ps2)/2.)
+        #codonPair_to_potential[pair] = {'N':(pn1+pn2)/2.,'S':(ps1+ps2)/2.}
         codonPair_to_potential[pair] = {'N':(pn1+pn2)/2.,'S':(ps1+ps2)/2.}
 
-        # }} alternative 2 {{
+        # }} 1 alternative 2 {{
 
         # codon1 = pair[0]
         # #codon2 = pair[1]
@@ -150,19 +153,19 @@ def potential_changes_dict(nt_to_aa):
 
         # }} alternative 2
 
-        # @TODO:DEBUG: is this assumption correct? Instead of average, perhaps we need to assume e.g. pn1 is "reference sequence" (ancestor), and only store pn1 rather than avg(pn1,pn2)? given an s1 codon and s2 codon, generate average potential 'N' and 'S'
+        # @todo:DEBUG: is this assumption correct? Instead of average, perhaps we need to assume e.g. pn1 is "reference sequence" (ancestor), and only store pn1 rather than avg(pn1,pn2)? given an s1 codon and s2 codon, generate average potential 'N' and 'S'
 
     # Pickle the output (later used by ./dnds.py) rather than return value, so this needs to only be run once.
     with open('./py/data/potential_changes_dict.p','wb') as f:
         pickle.dump(codonPair_to_potential,f)
 
-    # @TODO: check that for a single pair of codons, i.e. one key in .keys(), gives the right 's' and 'n' value, i.e. potential non-synonymous change and potential synonymous change value
+    # @todo: check that for a single pair of codons, i.e. one key in .keys(), gives the right 's' and 'n' value, i.e. potential non-synonymous change and potential synonymous change value
 
-    # @TODO: find out what: codonPair_to_potential actually is, then 
+    # @todo: find out what: codonPair_to_potential actually is, then 
     # add descr to func
     #pdb.set_trace()
 
-    return codonPair_to_potential
+    #return codonPair_to_potential
 
 
 
@@ -221,39 +224,41 @@ def observed_changes_dict(nt_to_aa):
 
             for site in path:
 
-                # alternative 1 {{
+                # alternative 1: @comparing mutants to original {{  
 
-                # # @TODO:DEBUG: I think I found it! we need to compare all mutated codons to the ORIGINAL codon, not successively mutated codons each mutation!
-                # #codon1_past         = ''.join(codon1_path1)
+                # @todo:DEBUG: I think I found it! we need to compare all mutated codons to the ORIGINAL codon, not successively mutated codons each mutation!
+                #codon1_past         = ''.join(codon1_path1)
 
-                # codon1_path1[site]  = codon2_path1[site]        # s1 = 'TTT' , s2 = 'ATA'  ==> 'TTT' --> 'ATT' 
-                # codon1_path1_str    = ''.join(codon1_path1)
-
-                # if nt_to_aa[codon1_path1_str] == nt_to_aa[codon1]:  # 'TTT --> 'ATT'
-                #     syn[i] += 1.0  
-                #     non[i] += 0.0
-                #     # syn.append(1)
-                #     # non.append(0)
-                # else:
-                #     syn[i] += 0.0
-                #     non[i] += 1.0
-                #     # syn.append(1)
-                #     # non.append(0)
-
-                # }} 1 alternative 2 {{ 
-
-                codon1_past         = ''.join(codon1_path1)
                 codon1_path1[site]  = codon2_path1[site]        # s1 = 'TTT' , s2 = 'ATA'  ==> 'TTT' --> 'ATT' 
-                codon1_path1        = ''.join(codon1_path1)
-                
-                if nt_to_aa[codon1_path1] == nt_to_aa[codon1_past]:  # 'TTT --> 'ATT'
-                    syn[i] = syn[i] + 1 
-                    non[i] = non[i] + 0
-                else:
-                    syn[i] = syn[i] + 0
-                    non[i] = non[i] + 1
+                codon1_path1_str    = ''.join(codon1_path1)
 
-                codon1_path1 = list(codon1_path1)
+                #@comparison-step mutants to original
+                if nt_to_aa[codon1_path1_str] == nt_to_aa[codon1]:  # 'TTT --> 'ATT'
+                    syn[i] += 1.0  
+                    non[i] += 0.0
+                    # syn.append(1)
+                    # non.append(0)
+                else:
+                    syn[i] += 0.0
+                    non[i] += 1.0
+                    # syn.append(1)
+                    # non.append(0)
+
+                # }} 1 alternative 2: comparing mutants successively {{ 
+
+                # codon1_past         = ''.join(codon1_path1)
+                # codon1_path1[site]  = codon2_path1[site]        # s1 = 'TTT' , s2 = 'ATA'  ==> 'TTT' --> 'ATT' 
+                # codon1_path1        = ''.join(codon1_path1)
+                
+                # #@comparison-step mutants successively
+                # if nt_to_aa[codon1_path1] == nt_to_aa[codon1_past]:  # 'TTT --> 'ATT'
+                #     syn[i] = syn[i] + 1 
+                #     non[i] = non[i] + 0
+                # else:
+                #     syn[i] = syn[i] + 0
+                #     non[i] = non[i] + 1
+
+                # codon1_path1 = list(codon1_path1)
 
                 # }} alternative 2
 
@@ -272,7 +277,7 @@ def observed_changes_dict(nt_to_aa):
     # Count observed differences between two codons, either: synonymous difference, or non-synonymous
     # 
 
-    # @TODO:debug: maybe use explicit floats to store counts? 1.0 instead of 1
+    # @todo:debug: maybe use explicit floats to store counts? 1.0 instead of 1
 
     # for codon1,codon2 in codonPairs:
 
@@ -298,7 +303,7 @@ def observed_changes_dict(nt_to_aa):
         #         else:
         #             codonPair_to_observed[(codon1,codon2)]['N'] += 1.0
 
-        # #@TODO:TEST:ensure we never have more than 3 total differences
+        # #@todo:TEST:ensure we never have more than 3 total differences
         # try:
         #     assert( (codonPair_to_observed[(codon1,codon2)]['N']+codonPair_to_observed[(codon1,codon2)]['S']) <= 3.0 )
         # except AssertionError:
@@ -309,7 +314,7 @@ def observed_changes_dict(nt_to_aa):
     with open('./py/data/observed_changes_dict.p','wb') as f:
         pickle.dump(codonPair_to_observed,f)
 
-    return codonPair_to_observed
+    #return codonPair_to_observed
 
 
 if __name__ == "__main__":
