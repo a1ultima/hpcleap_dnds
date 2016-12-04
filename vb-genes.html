@@ -154,8 +154,8 @@
     <script type="text/x-jsrender" id="domains">
 
     <div>
-		<p>Input: {{html:input}}</p>
-		<p>Output: {{html:output}}</p>
+		<p>&gt{{html:start}}<br>
+		{{html:end}}</p>
     </div>
 
     </script>	
@@ -199,7 +199,8 @@
             var urlArchive = 'https://www.vectorbase.org/rest/archive/id/' + geneId + '?content-type=application/json';
             var urlCDna = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=cds&multiple_sequences=1&mask=soft&content-type=application/json';
             var urlProtein = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=protein&multiple_sequences=1&content-type=application/json';
-			var urlDomains = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=protein&multiple_sequences=1&content-type=application/json';
+			var urlDomains = 'https://www.vectorbase.org/rest/overlap/translation/' + geneId + '-PA?feature=protein_feature;content-type=application/json';
+
             $.when($.getJSON(urlArchive), $.getJSON(urlCDna), $.getJSON(urlProtein), $.getJSON(urlDomains))
                     .done(function (json1, json2, json3, json4) {
 
@@ -231,7 +232,7 @@
 						$('#collapseThreeBody').html(html);
 						
 						// Reset template and html
-                        template = $.templates('#fastaSequence');
+                        template = $.templates('#domains');
                         html = '';
 						
 
