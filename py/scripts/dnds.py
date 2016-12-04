@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-
-
 """
 
 Calculate dN/dS using Nei Gojobori method with Juke-Cantor's multiple-substitution correction (optional), and whole sequence or sliding window. Tested against MATLAB's dnds().
@@ -33,9 +31,8 @@ import math
 import changes as codon_pair_data
 import warnings
 import time 
-#import os.path
-import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib.pyplot as plt 
+import numpy as np 
 
 start_time = time.time()
 

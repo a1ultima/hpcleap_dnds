@@ -154,8 +154,8 @@
     <script type="text/x-jsrender" id="domains">
 
     <div>
-		<p>&gt{{html:start}}<br>
-		{{html:end}}</p>
+		<p>Input: {{html:input}}</p>
+		<p>Output: {{html:output}}</p>
     </div>
 
     </script>	
@@ -199,8 +199,7 @@
             var urlArchive = 'https://www.vectorbase.org/rest/archive/id/' + geneId + '?content-type=application/json';
             var urlCDna = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=cds&multiple_sequences=1&mask=soft&content-type=application/json';
             var urlProtein = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=protein&multiple_sequences=1&content-type=application/json';
-			var urlDomains = 'https://www.vectorbase.org/rest/overlap/translation/' + geneId + '-PA?feature=protein_feature;content-type=application/json';
-
+			var urlDomains = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=protein&multiple_sequences=1&content-type=application/json';
             $.when($.getJSON(urlArchive), $.getJSON(urlCDna), $.getJSON(urlProtein), $.getJSON(urlDomains))
                     .done(function (json1, json2, json3, json4) {
 
@@ -215,7 +214,7 @@
 
                         // Render transcripts
                         json2[0].forEach(function (element) {
-                            html += template.render(element)  // @ANDY:@todo:@bug:seems if you provide a geneId with -PA, e.g. AGAP010815-PA you do not get it's transcripts and instead a protein seq in the Transcripts panel 
+                            html += template.render(element)  // @ANDY:@todo:seems if you provide a geneId with -PA, e.g. AGAP010815-PA you do not get it's transcripts and instead a protein seq in the Transcripts panel 
                         });
 
                         $('#collapseTwoBody').html(html);
@@ -232,7 +231,7 @@
 						$('#collapseThreeBody').html(html);
 						
 						// Reset template and html
-                        template = $.templates('#domains');
+                        template = $.templates('#fastaSequence');
                         html = '';
 						
 
@@ -324,7 +323,7 @@
         // Make the actual CORS request.
         function makeCorsRequest(geneId) {
             // This is a sample server that supports CORS.
-            var url = 'http://localhost:8000/test.py';
+            var url = 'http://localhost:8000/py/scripts/start_server.py';
 
             var xhr = createCORSRequest('GET', url);
             if (!xhr) {
@@ -334,17 +333,17 @@
 
             // Response handlers. @xhr-body
             xhr.onload = function() {
-                // @TODO: remove the next three lines after runPy() works
-                // var text = xhr.responseText;
-                // var title = getTitle(text);
-                // alert('Response from CORS request to ' + url + ': ' + title);
-                // var text = xhr.responseText;
-                // var title = getTitle(text);
+                //@todo: remove the next three lines after runPy() works
+                var text = xhr.responseText;
+                var title = getTitle(text);
+                alert('Response from CORS request to ' + url + ': ' + title);
+                var text = xhr.responseText;
+                var title = getTitle(text);
 
-                // var text = xhr.responseText;
-                // alert('Response from CORS request to ' + text);
+                var text = xhr.responseText;
+                alert('Response from CORS request to ' + text);
 
-                // Run the dnds.py calculator
+                Run the dnds.py calculator
                 runPy(geneId);
             };
 
