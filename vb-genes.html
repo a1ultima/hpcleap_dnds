@@ -262,6 +262,7 @@
 			$.ajax({
 					type: 'GET',
                     url: 'http://localhost:8000/py/scripts/dnds.py',
+                    //url: ('http://localhost:8000/py/scripts/dnds.py %i %i',s1,s2),
 					// url: 'http://localhost:8000/py/changes.py', // @TODO: uncomment later, so that we run the server from the /py/scripts dir, the root pathname: http://localhost:8000/
 					data: {param: geneId},
 					dataType: 'text',

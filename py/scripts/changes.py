@@ -128,7 +128,7 @@ def potential_changes_dict(nt_to_aa):
 
         # @DEUG:SOLVED: but still, I don't understand why the two alternatives gives such similar values (non-directional dnds, I think this is causing matlabTest bug? A: turns out not to make much difference, mind-blown)
         
-        # alternative 1 {{
+        # ALTERNATIVE 1 (no-directionality seems sensible, albeit ever so slightly more different to MATLAB values) {{
 
         codon1 = pair[0]
         codon2 = pair[1]
@@ -141,7 +141,7 @@ def potential_changes_dict(nt_to_aa):
         #codonPair_to_potential[pair] = {'N':(pn1+pn2)/2.,'S':(ps1+ps2)/2.}
         codonPair_to_potential[pair] = {'N':(pn1+pn2)/2.,'S':(ps1+ps2)/2.}
 
-        # }} 1 alternative 2 {{
+        # }} 1 ALTERNATIVE 2 (on one hand this alternative gives closer answer to MATLAB, esp. dnds.dnds( ... msCorrect = 'approximate', ... ), but on the other hand it leads to "directionality", i.e. different dnds values if seq1 and seq2 are swapped in the args {{
 
         # codon1 = pair[0]
         # #codon2 = pair[1]
@@ -151,7 +151,7 @@ def potential_changes_dict(nt_to_aa):
         # #ps2 = potential_changes['S'][codon2]
         # codonPair_to_potential[pair] = {'N':pn1,'S':ps1}
 
-        # }} alternative 2
+        # }} ALTERNATIVE 2
 
         # @todo:DEBUG: is this assumption correct? Instead of average, perhaps we need to assume e.g. pn1 is "reference sequence" (ancestor), and only store pn1 rather than avg(pn1,pn2)? given an s1 codon and s2 codon, generate average potential 'N' and 'S'
 
@@ -166,8 +166,6 @@ def potential_changes_dict(nt_to_aa):
     #pdb.set_trace()
 
     #return codonPair_to_potential
-
-
 
 def observed_changes_dict(nt_to_aa):
 
@@ -195,7 +193,7 @@ def observed_changes_dict(nt_to_aa):
     
     codonPair_to_observed = {}
 
-    #alternative 1 {{
+    #ALTERNATIVE 1 {{
 
 
     # @DONE: Q: I have no idea what the below is trying to do... why can't we just count the differences? Am I trying to simulate the ancestral sequence? A: it's finding all possible "mutational pathways" from one codon to the other, from all possible pathways we can yeild the values we need. 
@@ -224,43 +222,43 @@ def observed_changes_dict(nt_to_aa):
 
             for site in path:
 
-                # alternative 1: @comparing mutants to original {{  
+                # ALTERNATIVE 1: @comparing mutants to original {{  
 
-                # @todo:DEBUG: I think I found it! we need to compare all mutated codons to the ORIGINAL codon, not successively mutated codons each mutation!
-                #codon1_past         = ''.join(codon1_path1)
+                # # @todo:DEBUG: I think I found it! we need to compare all mutated codons to the ORIGINAL codon, not successively mutated codons each mutation!
+                # #codon1_past         = ''.join(codon1_path1)
 
-                codon1_path1[site]  = codon2_path1[site]        # s1 = 'TTT' , s2 = 'ATA'  ==> 'TTT' --> 'ATT' 
-                codon1_path1_str    = ''.join(codon1_path1)
-
-                #@comparison-step mutants to original
-                if nt_to_aa[codon1_path1_str] == nt_to_aa[codon1]:  # 'TTT --> 'ATT'
-                    syn[i] += 1.0  
-                    non[i] += 0.0
-                    # syn.append(1)
-                    # non.append(0)
-                else:
-                    syn[i] += 0.0
-                    non[i] += 1.0
-                    # syn.append(1)
-                    # non.append(0)
-
-                # }} 1 alternative 2: comparing mutants successively {{ 
-
-                # codon1_past         = ''.join(codon1_path1)
                 # codon1_path1[site]  = codon2_path1[site]        # s1 = 'TTT' , s2 = 'ATA'  ==> 'TTT' --> 'ATT' 
-                # codon1_path1        = ''.join(codon1_path1)
-                
-                # #@comparison-step mutants successively
-                # if nt_to_aa[codon1_path1] == nt_to_aa[codon1_past]:  # 'TTT --> 'ATT'
-                #     syn[i] = syn[i] + 1 
-                #     non[i] = non[i] + 0
+                # codon1_path1_str    = ''.join(codon1_path1)
+
+                # #@comparison-step mutants to original
+                # if nt_to_aa[codon1_path1_str] == nt_to_aa[codon1]:  # 'TTT --> 'ATT'
+                #     syn[i] += 1.0  
+                #     non[i] += 0.0
+                #     # syn.append(1)
+                #     # non.append(0)
                 # else:
-                #     syn[i] = syn[i] + 0
-                #     non[i] = non[i] + 1
+                #     syn[i] += 0.0
+                #     non[i] += 1.0
+                #     # syn.append(1)
+                #     # non.append(0)
 
-                # codon1_path1 = list(codon1_path1)
+                # }} 1 ALTERNATIVE 2: comparing mutants successively (seems to give closer answer to MATLAB, esp. using dnds.dnds( ... , msCorrect='approximate', ... ) ) {{ 
 
-                # }} alternative 2
+                codon1_past         = ''.join(codon1_path1)
+                codon1_path1[site]  = codon2_path1[site]        # s1 = 'TTT' , s2 = 'ATA'  ==> 'TTT' --> 'ATT' 
+                codon1_path1        = ''.join(codon1_path1)
+                
+                #@comparison-step mutants successively
+                if nt_to_aa[codon1_path1] == nt_to_aa[codon1_past]:  # 'TTT --> 'ATT'
+                    syn[i] = syn[i] + 1 
+                    non[i] = non[i] + 0
+                else:
+                    syn[i] = syn[i] + 0
+                    non[i] = non[i] + 1
+
+                codon1_path1 = list(codon1_path1)
+
+                # }} ALTERNATIVE 2
 
         try:
             assert isclose(np.mean(syn)+np.mean(non),float(len(path)))
@@ -271,7 +269,7 @@ def observed_changes_dict(nt_to_aa):
 
         codonPair_to_observed[pair] = {'S':np.mean(syn),'N':np.mean(non)}
 
-    #}} alternative 2 {{ 
+    #}} ALTERNATIVE 2 {{ 
 
     #
     # Count observed differences between two codons, either: synonymous difference, or non-synonymous
@@ -309,7 +307,7 @@ def observed_changes_dict(nt_to_aa):
         # except AssertionError:
         #     pdb.set_trace()
 
-    #}} alternative 2
+    #}} ALTERNATIVE 2
 
     with open('./py/data/observed_changes_dict.p','wb') as f:
         pickle.dump(codonPair_to_observed,f)
