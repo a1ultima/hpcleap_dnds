@@ -37,6 +37,9 @@ import numpy as np
 import changes as codon_pair_data  # /hpcleap_dnds/py/scripts/changes.py
 import align as align_then_trim    # /hpcleap_dnds/py/scripts/align.py
 
+# just for testin, @todo: remove testing imports
+import pdb
+
 start_time = time.time()
 
 # @todo: make a check to ensure the input seqs are divisible by 3 (i.e. n_aa_residues = n_dna_residues/3)
@@ -151,7 +154,7 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
 
         #window_stats_list = []
 
-        #pdb.set_trace()  # @done: test against matlab's sliding window, also @todo: find out what stepLength does, @todo: try to plot the sliding window version
+        # @done: test against matlab's sliding window, also @todo: find out what stepLength does, @todo: try to plot the sliding window version
 
         for window_i,window in enumerate(windows):
 
@@ -417,22 +420,34 @@ if __name__ == "__main__":
     #     https://www.vectorbase.org/Aedes_aegypti/Gene/Sequence?db=core;g=AAEL001802;r=supercont1.43:685886-717122;t=AAEL001802-RA
     s2_AAEL001802_RA = 'ATGTCGGTATTCATACAAACGGACAAACCGGTGTATACCCCGGGAGATCTGATACGTTTTCGGGTAATCGTGGTGGATGCTGACACTAGACCTGTGACTAGTATTAAAACGGTAAATATAGCGATCGACGATTCTGCAAAAAATTCCATTCGAAAGTGGCCTTATGCCAAGTTGTTAAACGGCATCTTTGAGTCACAAGTGCAATTAGCTTCTTCGCCTGTTCTTGGCACCTGGATTATCAACGTAACAGCTTCCGACGACATCATTGTCACCAAACAGATAGAAGTTAAGGAATATGTGTTGCCAAAATTTTTCGTGAAAGTTTACCCTTCGGAGGTTCTATTGGGGAAAAATAAGAAGGTTTCTCTTACCTTAGATGCCTATTACACGTTCAAAGAACCCGTCGACGGCAATTACAAAGTTGAGTTATTTTTGGACCATACCAAGAGAAAGCCTGACTTCATAAAAAGTGATCGAATCACCGGTAAAACATCACTTGAGTTTCAATTGAAAAATGAAGTAGACATTGATGGCGACGAGCAGTACACTGATGTCACGGTTGAAGTTGAAGTTGTCGAGGCATTTTCTAATCGCACAGTTAGTATAACTGAGAATATTCCGATTTATCGTCAGCCTTATACCGTGACCCTTCTTCCATCTGCACCATCATTTCGACCAGGAGTTCCATTCAATGTACAAATAGTTGTGAAAGATCAGCTTGGACACCCTCCTGCCGAAGAAAAAGCGGCATCAATTGACCTTACTGTAGAGTTCCATTTGCCCATTGACAGTGACACCAAATCTATCACTGTAGATCTGGACGAGAAAGGAACAGGTCAGCTCACATTAGAGCCCCGCCCAGACGCCCAAGAACTGAAAGTGAACGCTACATATGACTCTCAACAATACGATGTAATTCACGATCCGATACATGGTTTCAGTTCGCAAAGTAAGCAGTACATCACAGTAACTCTGAATCCAAAATACTATAACAACATTAAAGTCGATAAGGACATCGTACTGGACATCTCCTGCACTGAAACAATGACGCACTTCTCGTACATCGTTGTCACCAGAGGAAACATAGTGGAAGCATCGAACGTTCCTGTCAGGATAAAAAAGAAACATTCTCTGAGATTGAAAATGACTTCAAAAATGTCTCCGGAGTCGAGGCTTCTAGTGTACTATACAAACAGGGAGTATCTCATCTTTGATGATATTGAGCTGAAGTTCGATTCGTTCAACAACGACTTCAAATTCGATTTGAACGATGATGAGTATTTTCCAGGGCAATCAGTTTATATCGATGTATACGCTTCAAAGGATTCATACGTTGCGTTCAGTGGAATCGATGAAAGTGTACTCCTGGTAGGCAAAGAGCGCCATGACTTCAACAAAGGAGATGTGCTCAAGGAACTCGCTCTTTACGGAGCAACAAATGATGCCGAGTTTGACTTGTTCCACGTAAGTTTCATGTCAAATGGTTTGATTATTCCAGTTAATGTATCTGTAACTCGCTCACAGAATGCACGATTTGGTACTCTACTAGGAAGGACTAGGCAGCAAGCGATTGAAATTCGAACTCAATTCCTAGAATCCTGGTTATGGAAATCCTTTTCCATGGATGGTCGAAACAACTTCAAAGCAATAGAAGACTCGGTTCCGGATACTATTACAACGTATCACGTGTCAGGATTTGCTTTAAGTCCAACACTAGGTCTTGGAGTAATCCAACAACCAGTGAGTTTCACCGTTCGTAAAAAATTCTACTTGGTTGCAAATTTGCCTTACTCGATCAAACGGGGTGAAGTGGCGTTGATTCAGGTTACCGTCTTCAACTTCCTAGGAAGCAGCATAACAACCGATGTGACGCTGTTCAATAAACGCGATGAAATTGAGTTTGTCGAGAATGCATCCACTAATAATACACATCGAACAAAGGCGGTAATTGTCCCGAATAACAATGGAAAATCTGTATCATTTATGGTGAAAGCAAAGAAATTAGGACAGATTGCGATCAAATTCCAGGCGGTAAACCTGCTGGAAACGGATGCATTGGAGCACATGTTACGAGTAACCCCAGAGAGCCATCGCTATGAGAAAAATGTAGCTCGATTCGTTGAGCTACCAAAGTTTGAGACGCAAACTTTCGATGTGAAGCTGGACATTCCCAAAAATATCGACGAGGGTTCTGCTCAAATCAAATTCACGTTAGACCCGGACATTTTGGGAACAGCCATCAGCAACCTAGACGGGTTGATCCGGAAACCCTTTGGATGTGGCGAACAAAATATGCTCCATTTTGTGCCAAATATAGTCGTTTTGGATTATCTTAACGAAACCAACACAGCGGCAGAAGATGTGAGGACCAAAGCGATAAATTTTCTTAGCAGCGGATATCAAAACCAGCTACGCTACAAACGTTCGGATGGGGCCTTCAGTGTCTGGGGACAATCGTATGCTGGCAGTACATTTTTGACGGCCTTTGTGGCGAAATCATTCAAAATAGCAGCCAAATACATTCAGGTGGATAAGTCTATAGTAGACGCGGCATTCGACTGGTTAGTGAAACAACAACAATCAGATGGGCGGTTCCCAGAAGTGGGGCAAGTATTCCAAGCAGATATGCAGGGTGGGCTTCGTAATAACGGTTTTGCGCTTACCGCGTATGTTCTGATCGCTTTTGCTGAAAATAAGGAAGTATACAGAAAATACCAATCACAACTGAACAAAACTACTAACTTCATAGCAGATAGACTTGCTAATATGGAGAATCCATACGACCTCTCGCTGTCCACTTATGCGTTGATGCTAACAAATCATGGCAAGCGCACCGAGTTTCTTCACAAATTAGTCGAAAAGTCGATATTTGACCGCAATCAAACTGAGAGATATTGGGACAGCAAACCAGTTGATATTGAAGTTGCTGGATATGCTCTATTGTCATACGTAGCTGCCGGTAAATTATTGGATGCAACGCCTATCATGCGGTGGCTCAACAAGCAGCGTTATGGTCTCGGAGGCTATCCTGGAACTCAGGAAACATTCGTTGGATTGAAAGCATTGGCAACGTTCGCTGCAAATGTAACTAGTAGGAGAAACGAATATACTGTAAGGATATTCTACGAACCAAATGGTCGACGAACATTCGACGTACACATGCACAATTCGTTTAATATTCAAGAGCTTGACATTCCTAATAACATCAGAAAAATGAAGGTGGAAGTTGAAGGCATCGGCAGAGGCTTCTTCCAAGTGGCATATCAGTACTATCAAAATATGCAGGTGGCTAAGCCCAGTTTCAGCATTACAATTAATCAGCTTAACACCACGACGGAACACATGCAGCAATTGGACGTGTGTGTGAAATACATACCAAAAGAGGCTTATCAAAAATCGAATATGGCTTTGGTGGAAATATTCTTGCCTAGTGGGCTTGTAGCAGACTCAGATGCCATTACGGACAAGACTGGAGGAATTCGAAGAATTGAAAGACGTTTTTCGGACACCTCAGTAGTTATATATTATGATAATTTGGACCCCGAAGACAAGTGCTTCCGAGTGACTGCTTATCGTCGGTATAAAATTGCATTGCATTTGCCATCATATATTATAGTTTATGATTATTATAATTTTGAGCGCTTTGCCATTCAAAAGTACGAAGGAAAGGTGCTGCAGCTCTGCGATATTTGTGAAGACGAGGACTGCGAAACTTTATCATGTCAAAATAGCTCGAAATTGGCAATAATGTAA'
 
-    qry_seq_aln, ref_seq_aln = align_then_trim.align_query_vs_reference(s1_AGAP010815_RA,s2_AAEL001802_RA)
+    # @todo:@testing:benchmark vs. matlab:
+    #   using s1_AGAP010815_RA and
+
+    # MATLAB whole dnds vs. andy-wenping whole dnds (msCorrect='approximate'): dN/dS: 1.0958 vs. 1.04939841193 (Elapsed time: 1.952491045, Total warnings: 0), respectively
+    # MATLAB mean(sliding dnds) vs. andy-wenping mean(sliding dnds): Mean dN/dS over all 50-codon long windows: 1.7254581782566112 (smoothing?) vs. 1.49715496621 (incl. smoothing, stepLength=1) (Elapsed time: 2.29854488373, Total warnings: 173) (when taking the mean of all 50 window intervals in MATLAB's sliding dnds()
+    # MATLAB sliding dnds plot vs. andy-wenping sliding dnds plot: similar sliding dnds plots: see:  D:\Dropbox\00_HPC-LEAP\WP5 Thematic Cyprus Computational Biology\giannis_database
 
     #
-    # TRIM GAPS: 
+    # ALIGN REF vs. QUERY seq, then TRIM GAPS: 
     #     Next we want to remove all characters (trim) in each of the sequences that is aligned to a gap position**** in the top alignment
     #
 
-    #  E.g. alignment:
+    #  Alignment:
     #     ATGTGC----TAA  qry_seq
     #     ATG--A--TTTGA  ref_seq
     #        ^^ ^^^^     gap positions****
-    #  Perform trimming:
+    #  Trimming:
     #     ATGCTAA        qry_seq (after trimming)
     #     ATGATGA        ref_seq (after trimming)
 
+    # alignment scores are calculated from these two parameters, best scoring alignments have few gaps and gaps are small
+    aln_gap_open = -10      
+    aln_gap_extend = -0.5 # @todo: make cmd args later?
+
+    qry_seq_aln, ref_seq_aln         = align_then_trim.align_query_vs_reference(s1_AGAP010815_RA,s2_AAEL001802_RA, aln_gap_open, aln_gap_extend)
     qry_seq_trimmed, ref_seq_trimmed = align_then_trim.trim_gaps_from_aligned_seqs( qry_seq_aln, ref_seq_aln )
+
+    # @Note: benhamrking: it is qry_seq_trimmed and ref_seq_trimmed that should be used as input to MATLAB's dnds() function, for benchmarking
 
     #}} alternative 2
 
@@ -440,22 +455,20 @@ if __name__ == "__main__":
 
     # alternative 1 {{
 
-    # @NOTE:uncomment below to achieve dnds of 0.15.. or 0.164 if using exact method, interestingly 
-    dnds_whole, warning_count = dnds( qry_seq_trimmed, ref_seq_trimmed, potential_changes, observed_changes, msCorrect='exact', sliding=False)
-    print "dN/dS: "+str(dnds_whole)
+    # # @NOTE:uncomment below to achieve dnds of 0.15.. or 0.164 if using exact method, interestingly 
+    # dnds_whole, warning_count = dnds( qry_seq_trimmed, ref_seq_trimmed, potential_changes, observed_changes, msCorrect='approximate', sliding=False)
+    # print "dN/dS: "+str(dnds_whole)
 
     # }} 1 alternative 2 {{
 
-    # # @DONE: work with the sliding window version instead of dnds_whole
-    # dnds_slide_list, dnds_slide_dict, warning_count = dnds( qry_seq_trimmed, ref_seq_trimmed, potential_changes, observed_changes, msCorrect='approximate', sliding=True, windowLength=50, stepLength=1 )
-
-    # #
-    # # Plot the sliding window values
-    # #
-    # dnds_sliding_vec, dnds_sliding_mean = plot_dnds_sliding(dnds_slide_dict)
-    #print "Mean dN/dS over all windows: "+str(dnds_sliding_mean)
-
-    # # @todo: show the user also the whole dnds value somewhere in the webpage
+    # @DONE: work with the sliding window version instead of dnds_whole
+    dnds_slide_dict, warning_count = dnds( qry_seq_trimmed, ref_seq_trimmed, potential_changes, observed_changes, msCorrect='approximate', sliding=True, windowLength=50, stepLength=1 )
+    #
+    # Plot the sliding window values
+    #
+    dnds_sliding_vec, dnds_sliding_mean = plot_dnds_sliding(dnds_slide_dict)
+    print "Mean dN/dS over all windows: "+str(dnds_sliding_mean)
+    # @todo: show the user also the whole dnds value somewhere in the webpage
 
     # }} alternative 2warni
 

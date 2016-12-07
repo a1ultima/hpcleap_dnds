@@ -223,31 +223,31 @@ def observed_changes_dict(nt_to_aa):
 
                 # ALTERNATIVE 1: @comparing mutants to original {{  
 
-                # @todo:DEBUG: I think I found it! we need to compare all mutated codons to the ORIGINAL codon, not successively mutated codons each mutation!
-                #codon1_past         = ''.join(codon1_path1)
-                codon1_path1[site]  = codon2_path1[site]        # s1 = 'TTT' , s2 = 'ATA'  ==> 'TTT' --> 'ATT' 
-                codon1_path1_str    = ''.join(codon1_path1)
-                #@comparison-step mutants to original
-                if nt_to_aa[codon1_path1_str] == nt_to_aa[codon1]:  # 'TTT --> 'ATT'
-                    syn[i] += 1.0  
-                    non[i] += 0.0
-                else:
-                    syn[i] += 0.0
-                    non[i] += 1.0
+                # # @todo:DEBUG: I think I found it! we need to compare all mutated codons to the ORIGINAL codon, not successively mutated codons each mutation!
+                # #codon1_past         = ''.join(codon1_path1)
+                # codon1_path1[site]  = codon2_path1[site]        # s1 = 'TTT' , s2 = 'ATA'  ==> 'TTT' --> 'ATT' 
+                # codon1_path1_str    = ''.join(codon1_path1)
+                # #@comparison-step mutants to original
+                # if nt_to_aa[codon1_path1_str] == nt_to_aa[codon1]:  # 'TTT --> 'ATT'
+                #     syn[i] += 1.0  
+                #     non[i] += 0.0
+                # else:
+                #     syn[i] += 0.0
+                #     non[i] += 1.0
 
                 # }} 1 ALTERNATIVE 2: comparing mutants successively (seems to give closer answer to MATLAB, esp. using dnds.dnds( ... , msCorrect='approximate', ... ) ) {{ 
 
-                # codon1_past         = ''.join(codon1_path1)
-                # codon1_path1[site]  = codon2_path1[site]        # s1 = 'TTT' , s2 = 'ATA'  ==> 'TTT' --> 'ATT' 
-                # codon1_path1        = ''.join(codon1_path1)
-                # #@comparison-step mutants successively
-                # if nt_to_aa[codon1_path1] == nt_to_aa[codon1_past]:  # 'TTT --> 'ATT'
-                #     syn[i] = syn[i] + 1 
-                #     non[i] = non[i] + 0
-                # else:
-                #     syn[i] = syn[i] + 0
-                #     non[i] = non[i] + 1
-                # codon1_path1 = list(codon1_path1)
+                codon1_past         = ''.join(codon1_path1)
+                codon1_path1[site]  = codon2_path1[site]        # s1 = 'TTT' , s2 = 'ATA'  ==> 'TTT' --> 'ATT' 
+                codon1_path1        = ''.join(codon1_path1)
+                #@comparison-step mutants successively
+                if nt_to_aa[codon1_path1] == nt_to_aa[codon1_past]:  # 'TTT --> 'ATT'
+                    syn[i] = syn[i] + 1 
+                    non[i] = non[i] + 0
+                else:
+                    syn[i] = syn[i] + 0
+                    non[i] = non[i] + 1
+                codon1_path1 = list(codon1_path1)
 
                 # }} ALTERNATIVE 2
 
