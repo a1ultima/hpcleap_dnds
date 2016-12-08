@@ -24,10 +24,11 @@
             <div class="col-lg-4"></div>
             <div class="col-lg-4">
                 <div class="input-group">
-                    <input id="query-text" type="text" class="form-control" placeholder="VectorBase Gene ID">
+                    <!-- @query -->
+                    <input id="query-text" type="text" class="form-control" placeholder="VectorBase Gene ID">  
                     <span class="input-group-btn">
-                <button class="btn btn-default" type="button" id="btn-go">Go!</button>
-            </span>
+                        <button class="btn btn-default" type="button" id="btn-go">Go!</button>
+                    </span>
                 </div>
             </div>
             <div class="col-lg-4"></div>
@@ -48,7 +49,6 @@
                 </div>
                 <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
                     <div class="panel-body" id="collapseOneBody">
-
                     </div>
                 </div>
             </div>
@@ -125,6 +125,11 @@
                 <div id="collapseSix" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingSix">
                     <div class="panel-body" id="collapseSixBody">
                     </div>
+                    <!-- @todo:andy:added button to run python script vvvv, user pastes geneid of the ref-seq and pressing button both searches for the ref-seq via REST to VB then runs the dnds.py using query-seq gene id and ref-seq gene id as input -->
+                    <input id="query-text-ref-seq" type="text" class="form-control" placeholder="VectorBase Gene ID">  
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" id="btn-go-run-dnds">Go!</button> 
+                    </span>
                 </div>
             </div>
             
@@ -187,13 +192,22 @@
             spinner.spin(spinTarget);
             requestTree(query);
         });
+
         
-        $('#run-py').on("click", function () {
-            var query = $('#query-text').val();
+        // @done:andy:button now works, dnds.py script still needs to be integrated properly though
+        // @done:andy:uncomment but put this function on a button in the div, rather than on the header (as it is now)
+        $('#btn-go-run-dnds').on("click", function () {
+            var query = $('#query-text-ref-seq').val();
             spinner.spin(spinTarget);
+
+            requestReferenceSeq(query);
+
+            // @todo:andy:in <query> is the gene id of ref-seq, we also need the gene id of query-seq as input args to makeCorsReques(query-seq,ref-seq)
             makeCorsRequest(); // @latest:2016-11-27 @runpy:button
             // runPy(query);  // @ANDY:2016-11-27: runPy() does not seem to work, debugging: RunPy() changed to runPy(), lowercase, in case naming conventions is somehow confusing the code
         });
+
+        
 
         function requestAjax(geneId) {
             var urlArchive = 'https://www.vectorbase.org/rest/archive/id/' + geneId + '?content-type=application/json';
@@ -258,23 +272,34 @@
             })
 
         }
-        
-        function runPy(geneId) {
-            $.ajax({
-                    type: 'GET',
-                    url: 'http://localhost:8000/py/scripts/dnds.py',
-                    // url: 'http://localhost:8000/py/changes.py', // @TODO: uncomment later, so that we run the server from the /py/scripts dir, the root pathname: http://localhost:8000/
-                    data: {param: geneId},
-                    dataType: 'text',
-                    success: function(response){
-                        output = response;
-                        alert(output);
-                    }
-            }).done(function(data){
-            console.log(data);
-            alert(data);
-            });
+
+        // @todo:andy:add a function, linked to a button (@todo), to send a REST query to VB asking for the reference sequence, then spit into the Python Interface panel
+        function requestReferenceSeq(geneId) {
+            var urlCDna = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=cds&multiple_sequences=1&mask=soft&content-type=application/json';
+
+            $.when($.getJSON(urlCDna))
+                    .done(function (json1) {
+
+                        // Render archive info
+                        var template = $.templates("#fastaSequence");
+                        var html = template.render(json1[0]);
+                        $('#collapseSixBody').html(html);
+
+                        // Reset template and html
+                        template = $.templates('#fastaSequence');
+                        html = '';
+
+                        $('#accordion').show(); // @todo:andy:is this needed .v?
+                        spinner.stop();
+
+                    }).fail(function () {
+                        spinner.stop();
+                        console.log('Failed while loading Reference Sequence REST query (Python Interface)')
+                    })
+
         }
+        
+
         
         function requestTree(geneId) {
             var urlTree = 'https://www.vectorbase.org/rest/genetree/member/id/' + geneId +
@@ -324,7 +349,7 @@
         // Make the actual CORS request.
         function makeCorsRequest(geneId) {
             // This is a sample server that supports CORS.
-            var url = 'http://localhost:8000/test.py';
+            var url = 'http://localhost:8000/py/scripts/start_server.py';  // @todo: not entirely sure what to put here, the start_server.py, the pathname where the start_server.py was called, or the http://localhost:8000/? 
 
             var xhr = createCORSRequest('GET', url);
             if (!xhr) {
@@ -344,15 +369,34 @@
                 // var text = xhr.responseText;
                 // alert('Response from CORS request to ' + text);
 
-                // Run the dnds.py calculator
-                runPy(geneId);
+                // Run the dnds.py calculator  // @todo:geneId is not actually the input we want, change later
+                function runPy(geneId) {
+                    $.ajax({
+                        type: 'GET',
+                        url: 'http://localhost:8000/py/scripts/dnds.py',
+                        // url: 'http://localhost:8000/py/changes.py', // @TODO: uncomment later, so that we run the server from the /py/scripts dir, the root pathname: http://localhost:8000/
+                        data: {param: geneId},
+                        dataType: 'text',
+                        success: function(response){
+                            output = response;
+                            alert(output);
+                        };
+                    }).done(function(data){
+                    console.log(data);
+                    alert(data); // @done:paste the contents of the script to altert
+                    //return;  // @todo:do I need to add return?
+                    });
+                //return;  // @todo:do I need to add return?
+                };
             };
 
             xhr.onerror = function() {
                 alert('Woops, there was an error making the request.');
+                //return;  // @todo:do I need to add return?
             };
 
             xhr.send();
+            //return;  // @todo:do I need to add return
         }
 
     </script>
