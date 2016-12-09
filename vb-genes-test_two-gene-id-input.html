@@ -25,7 +25,7 @@
             <div class="col-lg-4">
                 <div class="input-group">
                     <!-- @query -->
-                    <input id="query-text" type="text" class="form-control" placeholder="VectorBase Gene ID">  
+                    <input id="query-text" type="text" class="form-control" placeholder="VectorBase Gene ID (query)">  
                     <span class="input-group-btn">
                         <button class="btn btn-default" type="button" id="btn-go">Go!</button>
                     </span>
@@ -123,13 +123,13 @@
                     </h4>
                 </div>
                 <div id="collapseSix" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingSix">
+                    <input id="query-text-ref-seq" type="text" class="form-control" placeholder="VectorBase Gene ID (must be an ortholog of the of the query above)">  
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" id="btn-go-run-dnds">Calculate dN/dS!</button> 
+                    </span>
                     <div class="panel-body" id="collapseSixBody">
                     </div>
                     <!-- @todo:andy:added button to run python script vvvv, user pastes geneid of the ref-seq and pressing button both searches for the ref-seq via REST to VB then runs the dnds.py using query-seq gene id and ref-seq gene id as input -->
-                    <input id="query-text-ref-seq" type="text" class="form-control" placeholder="VectorBase Gene ID">  
-                    <span class="input-group-btn">
-                        <button class="btn btn-default" type="button" id="btn-go-run-dnds">Go!</button> 
-                    </span>
                 </div>
             </div>
             
@@ -179,6 +179,7 @@
         // define global variables
         var spinTarget = document.getElementById('center');
         var spinner = new Spinner;
+        var qry_seq_fasta = "None" // @todo:andy:store the query-seq's sequence globally, so we do not sent too many uneccesary REST requests to VB @latest
 
         // bind function to Go button  ///jquery$
         $('#btn-go').on("click", function () {
@@ -197,14 +198,16 @@
         // @done:andy:button now works, dnds.py script still needs to be integrated properly though
         // @done:andy:uncomment but put this function on a button in the div, rather than on the header (as it is now)
         $('#btn-go-run-dnds').on("click", function () {
-            var query = $('#query-text-ref-seq').val();
             spinner.spin(spinTarget);
-
-            requestReferenceSeq(query);
-
+            var ref_seq_id = $('#query-text-ref-seq').val();
+            //var qry_seq_id = $('#query-text').val();
+            ref_seq_fasta = requestReferenceSeq(ref_seq_id); // e.g. "ATGCTTCCGACGACATCATTGTCACCAAACAGATAGAAGTTA" 
+            qry_seq_fasta = qry_seq_fasta // just for clarity, we take the qry_seq from the global var that was assigned during requestAjax
             // @todo:andy:in <query> is the gene id of ref-seq, we also need the gene id of query-seq as input args to makeCorsReques(query-seq,ref-seq)
-            makeCorsRequest(); // @latest:2016-11-27 @runpy:button
-            // runPy(query);  // @ANDY:2016-11-27: runPy() does not seem to work, debugging: RunPy() changed to runPy(), lowercase, in case naming conventions is somehow confusing the code
+            //makeCorsRequest(ref_seq_fasta, qry_seq_fasta); // @latest:2016-11-27 @runpy:button
+
+            runPy(qry_seq_fasta,ref_seq_fasta);  // @ANDY:2016-11-27: runPy() does not seem to work, debugging: RunPy() changed to runPy(), lowercase, in case naming conventions is somehow confusing the code
+            spinner.stop();
         });
 
         
@@ -231,6 +234,8 @@
                         json2[0].forEach(function (element) {
                             html += template.render(element)  // @ANDY:@todo:@bug:seems if you provide a geneId with -PA, e.g. AGAP010815-PA you do not get it's transcripts and instead a protein seq in the Transcripts panel 
                         });
+
+                        qry_seq_fasta = json2[0][0]['seq']  // @todo:andy:this assumes we only have ONE sequence given one gene-id, i.e. it will only take the first transcript available in VB for the given gene id. If multiple transcripts are available then this will crash/not be accurate... how do we deal with this?
 
                         $('#collapseTwoBody').html(html);
 
@@ -267,9 +272,9 @@
                         spinner.stop();
 
                     }).fail(function () {
-                spinner.stop();
-                console.log('Failed while loading irViolinStats')
-            })
+                        spinner.stop();
+                        console.log('Failed while loading irViolinStats');
+                    })
 
         }
 
@@ -280,21 +285,28 @@
             $.when($.getJSON(urlCDna))
                     .done(function (json1) {
 
-                        // Render archive info
-                        var template = $.templates("#fastaSequence");
-                        var html = template.render(json1[0]);
-                        $('#collapseSixBody').html(html);
+                        // // @todo:not sure why this needs json1[0], whereas in requestAjax the transcript sequence part needs json[0][0]... // if the REST query returned a single seq, we use json[0]['seq'], otherwise we need e.g. json[0][0]['seq'], 
+                        // if (json1.length==1){
+                        //     json_ref_seq = json[0]
+                        // } else {
+                        //     json_ref_seq = json
+                        // }
 
-                        // Reset template and html
-                        template = $.templates('#fastaSequence');
-                        html = '';
+                        // @todo:andy: pastes the sequence into the Python Interface panel, uncommented for now v*7
+                        // // Render archive info
+                        // var template = $.templates("#fastaSequence");
+                        // var html = template.render(json1[0]);
+                        // $('#collapseSixBody').html(html);
+                        // // Reset template and html
+                        // template = $.templates('#fastaSequence');
+                        // html = '';
 
-                        $('#accordion').show(); // @todo:andy:is this needed .v?
-                        spinner.stop();
+                        $('#accordion').show(); // @todo:andy:is this needed?
+
+                        return json1[0]['seq']; // return the reference sequence, for input arg to the dnds.py later: $('#btn-go-run-dnds') // @todo: this assumes the gene id given as the orthologue to the query gene id, only has a single transcript (it takes the first one available). This assumption is only true for a presumably small subset of gene ids. How do we deal with this...?
 
                     }).fail(function () {
-                        spinner.stop();
-                        console.log('Failed while loading Reference Sequence REST query (Python Interface)')
+                        console.log('Failed while loading Reference Sequence REST query (Python Interface)');
                     })
 
         }
@@ -347,18 +359,21 @@
         // }
 
         // Make the actual CORS request.
-        function makeCorsRequest(geneId) {
-            // This is a sample server that supports CORS.
-            var url = 'http://localhost:8000/py/scripts/start_server.py';  // @todo: not entirely sure what to put here, the start_server.py, the pathname where the start_server.py was called, or the http://localhost:8000/? 
+        function makeCorsRequest(qry_seq, ref_seq) {
+            // This is a sample server that supports CORS: https://www.html5rocks.com/en/tutorials/cors/
 
-            var xhr = createCORSRequest('GET', url);
+            //var url = 'http://localhost:8000/py/scripts/start_server.py';  // @todo: not entirely sure what to put here, the start_server.py, the pathname where the start_server.py was called, or the http://localhost:8000/? 
+
+            var url = 'http://localhost:8000/';  // @todo: not entirely sure what to put here, the 
+            var xhr = createCORSRequest('POST', url);
+
             if (!xhr) {
                 alert('CORS not supported');
                 return;
             }
 
             // Response handlers. @xhr-body
-            xhr.onload = function() {
+            xhr.onload = function(qry_seq, ref_seq) {
                 // @TODO: remove the next three lines after runPy() works
                 // var text = xhr.responseText;
                 // var title = getTitle(text);
@@ -369,25 +384,10 @@
                 // var text = xhr.responseText;
                 // alert('Response from CORS request to ' + text);
 
-                // Run the dnds.py calculator  // @todo:geneId is not actually the input we want, change later
-                function runPy(geneId) {
-                    $.ajax({
-                        type: 'GET',
-                        url: 'http://localhost:8000/py/scripts/dnds.py',
-                        // url: 'http://localhost:8000/py/changes.py', // @TODO: uncomment later, so that we run the server from the /py/scripts dir, the root pathname: http://localhost:8000/
-                        data: {param: geneId},
-                        dataType: 'text',
-                        success: function(response){
-                            output = response;
-                            alert(output);
-                        }
-                    }).done(function(data){
-                        console.log(data);
-                        alert(data); // @done:paste the contents of the script to altert
-                        //return;  // @todo:do I need to add return?
-                    });
-                //return;  // @todo:do I need to add return?
-                };
+                // Run the dnds.py calculator  // @done:geneId is not actually the input we want, change later
+
+                var qry_and_ref_seq = qry_seq.concat("+",ref_seq);
+                runPy(qry_and_ref_seq);
             };
 
             xhr.onerror = function() {
@@ -398,6 +398,26 @@
             xhr.send();
             //return;  // @todo:do I need to add return
         }
+
+        // dnds.py calculator
+        function runPy(qry_and_ref_seq) {
+            $.ajax({
+                type: "POST", // @latest // @todo:andy:urgent: latest bug: POST http://localhost:8000/py/scripts/dnds.py 501 (Unsupported method ('POST')), I'm just really unsure what to type in the options for $ajax() to get the python script to run and return a result.... @ask:bob/giannis:@2016-12-09 // see: http://www.w3schools.com/jquery/ajax_ajax.asp
+                url: 'http://localhost:8000/', // @todo: change this line so qry_seq and ref_seq are concatenated (as cmd-line args to dnds.py), i.e. 'http://localhost:8000/py/scripts/dnds.py <qry_seq> <ref_seq>''
+                // url: 'http://localhost:8000/py/changes.py', // @todo: uncomment later, so that we run the server from the /py/scripts dir, the root pathname: http://localhost:8000/
+                data: {param: qry_and_ref_seq},
+                dataType: 'text',
+                success: function(response){
+                    output = response;
+                    alert(output);
+                }
+            }).done(function(data){
+                console.log(data);
+                alert(data); // @done:paste the contents of the script to altert
+                //return;  // @todo:do I need to add return?
+            });
+        //return;  // @todo:do I need to add return?
+        };
 
     </script>
 </div>
