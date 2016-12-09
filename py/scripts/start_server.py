@@ -38,14 +38,20 @@ class CORSRequestHandler (SimpleHTTPRequestHandler):
         content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
         post_data = self.rfile.read(content_length) # <--- Gets the data itself
 
-        qry_seq_raw, ref_seq_raw = post_data.split("+")
+        #pdb.set_trace()
+
+        qry_and_ref_seq_list = post_data.replace("s1=","").replace("s2=","")
+        qry_and_ref_seq_list = qry_and_ref_seq_list.split("&")
+
+        qry_seq_raw = qry_and_ref_seq_list[0]
+        ref_seq_raw = qry_and_ref_seq_list[1]
 
         dnds_data = dnds.dnds_pipeline(qry_seq_raw, ref_seq_raw)
 
-        #pdb.set_trace()
-
         self._set_headers()
         self.wfile.write("<html><body><h1>"+str(dnds_data)+"</h1></body></html>")
+
+        
 
 if __name__ == '__main__':
     BaseHTTPServer.test(CORSRequestHandler, BaseHTTPServer.HTTPServer)
