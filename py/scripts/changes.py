@@ -11,6 +11,7 @@ import numpy as np
 import pickle
 from  itertools import permutations
 import copy # @todo: remove the deepcopying?
+#import pdb
 
 # FUNCTION DEFS:
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
@@ -90,6 +91,7 @@ def potential_changes_dict(nt_to_aa):
             for nt in nts:
 
                 codon_mutated = list(copy.deepcopy(codon))
+                #codon_mutated = codon
                 codon_mutated[codon_p] = nt  # mutate the basepair
                 codon_mutated = ''.join(codon_mutated)
                 
