@@ -181,9 +181,9 @@ def trim_gaps_from_aligned_seqs( qry_seq_aln, ref_seq_aln ):
 
    qry_and_ref_arr = np.array(qry_and_ref_arr)
 
-   qry_trimmed= "".join(list(qry_and_ref_arr[:,0]))
-   ref_trimmed= "".join(list(qry_and_ref_arr[:,1]))
-   qry_indices= "".join(list(qry_and_ref_arr[:,2]))
+   qry_trimmed = "".join(list(qry_and_ref_arr[:,0]))
+   ref_trimmed = "".join(list(qry_and_ref_arr[:,1]))
+   qry_indices = list(qry_and_ref_arr[:,2])
 
    # }} alternative 2 
 
