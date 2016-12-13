@@ -42,6 +42,7 @@ substitution mutations (synonymous, non-synonymous changes).
 # IMPORTS #
 ###########
 
+import numpy as np
 import pdb
 
 #############
@@ -129,50 +130,66 @@ def trim_gaps_from_aligned_seqs( qry_seq_aln, ref_seq_aln ):
 
    """
 
-   qry_gap_positions = [i for i, letter in enumerate(qry_seq_aln) if letter.upper() not in ['A','G','T','C'] ]
+   # alternative 1 {{  # progressiely delete gaps and re-normalise index to delete with
 
+   # qry_gap_positions = [i for i, letter in enumerate(qry_seq_aln) if letter.upper() not in ['A','G','T','C'] ]
 
+   # # temp variables start with a copy of a and b as lists 
+   # #  (to allow index-based deletions of elements)
+   # qry_after_trim_qry_gaps = list(qry_seq_aln)
+   # ref_after_trim_qry_gaps = list(ref_seq_aln)
 
-   # temp variables start with a copy of a and b as lists 
-   #  (to allow index-based deletions of elements)
-   qry_after_trim_qry_gaps = list(qry_seq_aln)
-   ref_after_trim_qry_gaps = list(ref_seq_aln)
+   # re_normalise_i = 0  # since the sequences get progressively shorter with each element deletion, we must correct the index used to delete with, for every deletion
 
-   re_normalise_i = 0  # since the sequences get progressively shorter with each element deletion, we must correct the index used to delete with, for every deletion
+   # # corresponding to gaps in a: delete letters in a and b 
+   # for i in qry_gap_positions:
+   #    del qry_after_trim_qry_gaps[i-re_normalise_i]
+   #    del ref_after_trim_qry_gaps[i-re_normalise_i]
+   #    re_normalise_i += 1
 
-   # corresponding to gaps in a: delete letters in a and b 
-   for i in qry_gap_positions:
-      del qry_after_trim_qry_gaps[i-re_normalise_i]
-      del ref_after_trim_qry_gaps[i-re_normalise_i]
-      re_normalise_i += 1
+   # ref_gap_positions_after_trim_qry_gaps = [i for i, letter in enumerate("".join(ref_after_trim_qry_gaps)) if '-' in letter]
 
-   ref_gap_positions_after_trim_qry_gaps = [i for i, letter in enumerate("".join(ref_after_trim_qry_gaps)) if '-' in letter]
+   # # temp variables start with a copy of a and b as lists 
+   # #  (to allow index-based deletions of elements)
+   # qry_after_trim_qry_and_ref_gaps = qry_after_trim_qry_gaps
+   # ref_after_trim_qry_and_ref_gaps = ref_after_trim_qry_gaps
 
-   # temp variables start with a copy of a and b as lists 
-   #  (to allow index-based deletions of elements)
-   qry_after_trim_qry_and_ref_gaps = qry_after_trim_qry_gaps
-   ref_after_trim_qry_and_ref_gaps = ref_after_trim_qry_gaps
+   # re_normalise_i = 0  # since the sequences get progressively shorter with each element deletion, we must correct the index used to delete with, for every deletion
 
-   re_normalise_i = 0  # since the sequences get progressively shorter with each element deletion, we must correct the index used to delete with, for every deletion
+   # # corresponding to gaps in b: delete letters in a and b 
+   # for i in ref_gap_positions_after_trim_qry_gaps:
+   #    del qry_after_trim_qry_and_ref_gaps[i-re_normalise_i]
+   #    del ref_after_trim_qry_and_ref_gaps[i-re_normalise_i]
+   #    re_normalise_i += 1
 
-   # corresponding to gaps in b: delete letters in a and b 
-   for i in ref_gap_positions_after_trim_qry_gaps:
-      del qry_after_trim_qry_and_ref_gaps[i-re_normalise_i]
-      del ref_after_trim_qry_and_ref_gaps[i-re_normalise_i]
-      re_normalise_i += 1
+   # # format back into strings
+   # qry_trimmed = "".join(qry_after_trim_qry_and_ref_gaps)
+   # ref_trimmed = "".join(ref_after_trim_qry_and_ref_gaps)
 
-   # format back into strings
-   qry_trimmed = "".join(qry_after_trim_qry_and_ref_gaps)
-   ref_trimmed = "".join(ref_after_trim_qry_and_ref_gaps)
+   # # # @TEST:passed:simulated the following seqs, a and b, and predicted exprected 
+   # # #     correct output, and indeed output of trim_gaps_from_aligned_seqs() met expected
+   # # qry_seq_aln = 'ATGTGC----TAA'
+   # # ref_seq_aln = 'ATG--A--TTTGA'
+   # # qry_expected_after_trim = 'ATGCTAA'
+   # # ref_expected_after_trim = 'ATGATGA'
 
-   # # @TEST:passed:simulated the following seqs, a and b, and predicted exprected 
-   # #     correct output, and indeed output of trim_gaps_from_aligned_seqs() met expected
-   # qry_seq_aln = 'ATGTGC----TAA'
-   # ref_seq_aln = 'ATG--A--TTTGA'
-   # qry_expected_after_trim = 'ATGCTAA'
-   # ref_expected_after_trim = 'ATGATGA'
+   # }} 1 alternative 2  {{ # wenping style: print only letters that both lists have in a nesteed list
 
-   return qry_trimmed, ref_trimmed
+   #qry_and_ref_arr = [qry_seq_aln, ref_seq_aln]
+
+   qry_and_ref_arr = [(j,ref_seq_aln[i],i) for i,j in enumerate(qry_seq_aln) if (("-" != ref_seq_aln[i]) and ("-" != j))]
+
+   qry_and_ref_arr = np.array(qry_and_ref_arr)
+
+   qry_trimmed= "".join(list(qry_and_ref_arr[:,0]))
+   ref_trimmed= "".join(list(qry_and_ref_arr[:,1]))
+   qry_indices= "".join(list(qry_and_ref_arr[:,2]))
+
+   # }} alternative 2 
+
+   #pdb.set_trace()
+ 
+   return qry_trimmed, ref_trimmed, qry_indices
 
 
 ##########
@@ -211,7 +228,9 @@ if __name__ == "__main__":
    #     ATGCTAA        qry_seq (after trimming)
    #     ATGATGA        ref_seq (after trimming)
 
-   qry_seq_trimmed, ref_seq_trimmed = trim_gaps_from_aligned_seqs( qry_seq_aln, ref_seq_aln )
+   qry_seq_trimmed, ref_seq_trimmed, qry_seq_indices = trim_gaps_from_aligned_seqs( qry_seq_aln, ref_seq_aln )
+
+
 
    #
    # @test:if the alignment and trimmer functions did their job correctly there should be exactly equal len(seq) for qry and ref

@@ -213,7 +213,7 @@
             //var qry_and_ref_seq = qry_seq_fasta.concat(" ",ref_seq_fasta);
 
             // moving within the requestReferenceSeq function to make sure requestReferenceSeq is completed
-            // runPy(qry_seq_fasta, ref_seq_fasta);  // @ANDY:2016-11-27: runPy() does not seem to work, debugging: RunPy() changed to runPy(), lowercase, in case naming conventions is somehow confusing the code
+            // runPy(qry_seq_fasta, ref_seq_fasta);  // @ANDY:2016-11-27: runPy() does not seem to work when called here, it must be run within requestReferenceSeq(), otherwise a bug. This is because requestReferenceSeq is an ajax call, and the asynchronous running of it means runPy would be trying to take an input argument that had not been assigned (the global variable ref_seq_fasta that is assigned in requestReferenceSeq), i.e. the requestReferenceSeq takes too long to create it's global variable, and so runPy() tries to run asyncrhonously taking an input argument that has not yet been assigned
             spinner.stop();
         });
 

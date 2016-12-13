@@ -482,8 +482,8 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
     aln_gap_open = -10      
     aln_gap_extend = -0.5 # @todo: make cmd args later?
 
-    qry_seq_aln, ref_seq_aln         = align_then_trim.align_query_vs_reference(qry_seq_raw, ref_seq_raw, aln_gap_open, aln_gap_extend)
-    qry_seq_trimmed, ref_seq_trimmed = align_then_trim.trim_gaps_from_aligned_seqs( qry_seq_aln, ref_seq_aln )
+    qry_seq_aln, ref_seq_aln                          = align_then_trim.align_query_vs_reference(qry_seq_raw, ref_seq_raw, aln_gap_open, aln_gap_extend)
+    qry_seq_trimmed, ref_seq_trimmed, qry_seq_indices = align_then_trim.trim_gaps_from_aligned_seqs( qry_seq_aln, ref_seq_aln )
 
     # @Note: benhamrking: it is qry_seq_trimmed and ref_seq_trimmed that should be used as input to MATLAB's dnds() function, for benchmarking
 
@@ -508,7 +508,7 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
     print "Mean dN/dS over all windows: "+str(dnds_sliding_mean)
     # @todo: show the user also the whole dnds value somewhere in the webpage
 
-    return dnds_sliding_vec
+    return dnds_sliding_vec, qry_seq_indices
 
 
 
@@ -639,7 +639,11 @@ if __name__ == "__main__":
     #     Next we want to remove all characters (trim) in each of the sequences that is aligned to a gap position**** in the top alignment
     #
 
-    #  Alignment:
+    #  Raw input:
+    #     ATGTGCTAA      qry
+    #     ATGATTTGA      ref
+    #
+    # Alignment:
     #     ATGTGC----TAA  qry_seq
     #     ATG--A--TTTGA  ref_seq
     #        ^^ ^^^^     gap positions****
