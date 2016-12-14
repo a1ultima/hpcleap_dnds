@@ -54,7 +54,7 @@ class CORSRequestHandler (SimpleHTTPRequestHandler):
         #pdb.set_trace()
 
         self._set_headers()
-        self.wfile.write("<html><body><h1>"+str(dnds_data_vec)+"</h1><h1>"+qry_seq_indices+"</h1></body></html>")
+        self.wfile.write("<html><body><h1>"+str(dnds_data_vec)+"</h1><h2>"+str(qry_seq_indices)+"</h2></body></html>")
 
         
 

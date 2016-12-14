@@ -57,12 +57,13 @@ import warnings
 
 #import matplotlib.pyplot as plt 
 import numpy as np 
+
 # andy-developed modules: imported from py/scripts/ (i.e. "." relative to where this file is)
 import changes as codon_pair_data  # /hpcleap_dnds/py/scripts/changes.py
 import align as align_then_trim    # /hpcleap_dnds/py/scripts/align.py
 
 # just for testing, @todo: remove testing imports
-#import pdb
+import pdb
 #import time 
 #start_time = time.time()  # @time
 
@@ -340,7 +341,10 @@ def plot_dnds_sliding(dnds_slide_dict):
     # plt.savefig("py/data/dnds_sliding_test.png")
     # avg_matrix = overlap_matrix.mean(axis=1)
 
-    return overlap_matrix_avg, overlap_matrix_avg.mean()
+    overlap_matrix_avg_lis = overlap_matrix_avg.data.tolist()
+
+
+    return overlap_matrix_avg_lis, overlap_matrix_avg.mean()
 
 
 def dnds_pipeline(qry_seq_in, ref_seq_in):

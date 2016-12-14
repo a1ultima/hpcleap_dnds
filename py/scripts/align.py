@@ -183,7 +183,7 @@ def trim_gaps_from_aligned_seqs( qry_seq_aln, ref_seq_aln ):
 
    qry_trimmed = "".join(list(qry_and_ref_arr[:,0]))
    ref_trimmed = "".join(list(qry_and_ref_arr[:,1]))
-   qry_indices = list(qry_and_ref_arr[:,2])
+   qry_indices = qry_and_ref_arr[:,2].astype(int).tolist()
 
    # }} alternative 2 
 
