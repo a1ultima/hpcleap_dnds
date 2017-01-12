@@ -177,13 +177,30 @@ def trim_gaps_from_aligned_seqs( qry_seq_aln, ref_seq_aln ):
 
    #qry_and_ref_arr = [qry_seq_aln, ref_seq_aln]
 
-   qry_and_ref_arr = [(j,ref_seq_aln[i],i) for i,j in enumerate(qry_seq_aln) if (("-" != ref_seq_aln[i]) and ("-" != j))]
+   #qry_and_ref_arr = [(j,ref_seq_aln[i],i) for i,j in enumerate(qry_seq_aln) if (("-" != ref_seq_aln[i]) and ("-" != j))]
 
+   # Triming gaps and adjusting the qry indices
+   qry_R=np.zeros(len(qry_seq_aln))
+   i=0
+   while qry_seq_aln[i]=='-':
+       i=i+1
+   #j=qry_seq_aln[i]
+   j=0
+   for i in range(len(qry_seq_aln)):
+      if("-"!=qry_seq_aln[i]): 
+         qry_R[i]=j
+         j=j+1
+   print qry_R
+   
+   qry_and_ref_arr = [(j,ref_seq_aln[i],qry_R[i]) for i,j in enumerate(qry_seq_aln) if (("-" != ref_seq_aln[i]) and ("-" != j))]
+   
    qry_and_ref_arr = np.array(qry_and_ref_arr)
 
-   qry_trimmed = "".join(list(qry_and_ref_arr[:,0]))
-   ref_trimmed = "".join(list(qry_and_ref_arr[:,1]))
-   qry_indices = qry_and_ref_arr[:,2].astype(int).tolist()
+   qry_trimmed= "".join(list(qry_and_ref_arr[:,0]))
+   ref_trimmed= "".join(list(qry_and_ref_arr[:,1]))
+   indeces_pro= list(qry_and_ref_arr[:,2])
+   indeces_pro1= indeces_pro[0::3]
+   qry_indices= ",".join(indeces_pro1)
 
    # }} alternative 2 
 
