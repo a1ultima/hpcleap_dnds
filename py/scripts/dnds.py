@@ -500,7 +500,7 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
     # }} 1 alternative 2 {{
 
     # @DONE: work with the sliding window version instead of dnds_whole
-    dnds_slide_dict, warning_count = dnds( qry_seq_trimmed, ref_seq_trimmed, potential_changes, observed_changes, msCorrect='approximate', sliding=True, windowLength=50, stepLength=1 )
+    dnds_slide_dict, warning_count = dnds( qry_seq_trimmed, ref_seq_trimmed, potential_changes, observed_changes, msCorrect='approximate', sliding=True, windowLength=25, stepLength=1 )
     #
     # Plot the sliding window values
     #
