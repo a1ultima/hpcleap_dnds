@@ -181,15 +181,12 @@ def trim_gaps_from_aligned_seqs( qry_seq_aln, ref_seq_aln ):
 
    # Triming gaps and adjusting the qry indices
    qry_R=np.zeros(len(qry_seq_aln))
-   i=0
-   while qry_seq_aln[i]=='-':
-       i=i+1
-   j=qry_seq_aln[i]
+   j=0
    for i in range(len(qry_seq_aln)):
       if("-"!=qry_seq_aln[i]): 
          qry_R[i]=j
          j=j+1
-   print qry_R
+   #print qry_R
    
    qry_and_ref_arr = [(j,ref_seq_aln[i],qry_R[i]) for i,j in enumerate(qry_seq_aln) if (("-" != ref_seq_aln[i]) and ("-" != j))]
    
