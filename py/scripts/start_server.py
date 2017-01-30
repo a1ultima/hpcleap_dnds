@@ -38,7 +38,9 @@ class CORSRequestHandler (SimpleHTTPRequestHandler):
         content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
         post_data = self.rfile.read(content_length) # <--- Gets the data itself
 
-        #pdb.set_trace()
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        print("STARTING: sliding window, gaussian-smoothed dN/dS analysis...")
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
         qry_and_ref_seq_list = post_data.replace("s1=","").replace("s2=","")
         qry_and_ref_seq_list = qry_and_ref_seq_list.split("&")
@@ -50,14 +52,18 @@ class CORSRequestHandler (SimpleHTTPRequestHandler):
 
         dnds_data_vec = dnds_data[0]
         qry_seq_indices = dnds_data[1]
-		
-		#return_data = '{"dnds_data_vec": dnds_data_vec, "qry_seq_indices": qry_seq_indices}'
-		
-        #pdb.set_trace()
+        
+        #return_data = '{"dnds_data_vec": dnds_data_vec, "qry_seq_indices": qry_seq_indices}'
+
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        print("ENDING: sliding window, gaussian-smoothed dN/dS analysis...")
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
         self._set_headers()
         self.wfile.write("<html><body><h1>"+str(dnds_data_vec)+"</h1><h2>"+str(qry_seq_indices)+"</h2></body></html>")
-		#self.wfile.write(str(dnds_data))
+        #self.wfile.write(str(dnds_data))
+
+
         
 
 if __name__ == '__main__':

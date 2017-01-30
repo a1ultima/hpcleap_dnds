@@ -62,9 +62,9 @@ import changes as codon_pair_data  # /hpcleap_dnds/py/scripts/changes.py
 import align as align_then_trim    # /hpcleap_dnds/py/scripts/align.py
 
 # just for testing, @todo: remove testing imports
-#import pdb
-#import time 
-#start_time = time.time()  # @time
+import pdb
+import time 
+start_time = time.time()  # @time
 
 # @todo: make a check to ensure the input seqs are divisible by 3 (i.e. n_aa_residues = n_dna_residues/3)
 
@@ -212,14 +212,13 @@ def dnds( seq1, seq2, changes_potential, changes_observed, msCorrect='approximat
             # e.g. missing value/datapoint on a plot of dN/dS (y-axis) vs. window interval (x-axis)
             except ZeroDivisionError:
                 warning_count += 1
-
-                warn_msg = "Query and Reference sequences are too divergent. Approximate multiple-substitutions correction cannot be achieved, for window: "+str(window_i)+", dS is zero, leading to a division error when trying dN/dS... try alternative value for argument: msCorrect (e.g. 'exact') OR alternative value for argument: windowLength (e.g. "+str(windowLength+20)+") ...\n"
-                warnings.warn(warn_msg)
+                #warn_msg = "Query and Reference sequences are too divergent. Approximate multiple-substitutions correction cannot be achieved, for window: "+str(window_i)+", dS is zero, leading to a division error when trying dN/dS... try alternative value for argument: msCorrect (e.g. 'exact') OR alternative value for argument: windowLength (e.g. "+str(windowLength+20)+") ...\n"   # # @TODO: uncomment for verbose warning message prints // @ANDY-2017-01-30
+                #warnings.warn(warn_msg)  # @TODO: uncomment for verbose warning message prints // @ANDY-2017-01-30
                 window_stats[window]['dNdS'] = float('Inf')
             except ValueError:
                 warning_count += 1
-                warn_msg="Query and Reference sequences are too divergent. Approximate multiple-substitutions correction cannot be achieved, for window: "+str(window_i)+",  SYNONYMOUS changes per synonymous site, pS>=3/4, log() operation will yeild return undefined... try alternative value for argument: msCorrect (e.g. 'exact') OR alternative value for argument: windowLength (e.g. "+str(windowLength+20)+") ...\n"
-                warnings.warn(warn_msg) 
+                #warn_msg="Query and Reference sequences are too divergent. Approximate multiple-substitutions correction cannot be achieved, for window: "+str(window_i)+",  SYNONYMOUS changes per synonymous site, pS>=3/4, log() operation will yeild return undefined... try alternative value for argument: msCorrect (e.g. 'exact') OR alternative value for argument: windowLength (e.g. "+str(windowLength+20)+") ...\n"  # # @TODO: uncomment for verbose warning message prints // @ANDY-2017-01-30
+                #warnings.warn(warn_msg)  # @TODO: uncomment for verbose warning message prints // @ANDY-2017-01-30
                 window_stats[window]['dNdS'] = float('nan')
 
         return window_stats,warning_count  # list of dnds per window interval // dict of dnds, key=(<from #base pair>,<to #base pair>), value=<dN/dS of the window specified in the key>
@@ -339,9 +338,11 @@ def plot_dnds_sliding(dnds_slide_dict):
     # plt.show()
     # plt.savefig("py/data/dnds_sliding_test.png")
     # avg_matrix = overlap_matrix.mean(axis=1)
-    print overlap_matrix_avg
+    # print overlap_matrix_avg
     return list(overlap_matrix_avg), overlap_matrix_avg.mean()
 
+
+# @ANDY:code redundancy, can uncomment if we need to load this whole pipeline as a function
 
 def dnds_pipeline(qry_seq_in, ref_seq_in):
 
@@ -356,7 +357,12 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
     # 
     # TRY CACHED DATA:
     #   Open dictionaries that have cached computationally intensively 
-    #   produced results 
+    #   produced results, these are all possible codon pairs with cached statistics for all possible pairs regardless of user input seqs 
+
+    print("============================================================================") # @todo:REMOVE
+    print("dN/dS sliding analysis: pre-cached statistics for all possible codon pairs...")
+    print("============================================================================") # @todo:REMOVE
+
     #
     try:       
     #if (os.path.exists("./py/data/observed_changes_dict.p") and os.path.exists("./py/data/potential_changes_dict.p")):
@@ -365,14 +371,16 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
         #
         # Unpickle codonPair-to-statistics dictionaries
         #
-        f1 = open('./py/data/observed_changes_dict.p','rb')
+        f1 = open('../data/observed_changes_dict.p','rb')
         observed_changes  = pickle.load(f1)
         f1.close()
 
-        f2 = open('./py/data/potential_changes_dict.p','rb')
+        f2 = open('../data/potential_changes_dict.p','rb')
         potential_changes = pickle.load(f2)
         f2.close()
-        print "LOADED!!" # @todo:REMOVE
+
+        print("\tLOADED!") # @todo:REMOVE
+        
     except IOError:
     #else:
     # CREATE NEW (slow)
@@ -413,7 +421,8 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
 
         # }} alternative 2
 
-        print "CREATED!!" # @todo:REMOVE
+        print("\tCREATED!") # @todo:REMOVE
+
 
     #
     #  Calculate dN/dS
@@ -450,6 +459,10 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
     ###########################
     # Benchmarking vs. MATLAB #
     ###########################
+
+    print("=========================================")
+    print("Processing heuristic codon alignments....")
+    print("=========================================")
 
     # @done:@testing:benchmark vs. matlab: @todo: place in README these details
     #   using s1_AGAP010815_RA and s2_AAEL001802_RA (after aligning/trimming)
@@ -489,11 +502,17 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
 
     # @Note: benhamrking: it is qry_seq_trimmed and ref_seq_trimmed that should be used as input to MATLAB's dnds() function, for benchmarking
 
+    print("\tCOMPLETE!")
+
     #}} alternative 2
 
     # ///
 
     # alternative 1 {{
+
+    print("===========================")
+    print("Sliding window analysis....")
+    print("===========================")
 
     # # @NOTE:uncomment below to achieve dnds of 0.15.. or 0.164 if using exact method, interestingly 
     # dnds_whole, warning_count = dnds( qry_seq_trimmed, ref_seq_trimmed, potential_changes, observed_changes, msCorrect='approximate', sliding=False)
@@ -507,10 +526,22 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
     # Plot the sliding window values
     #
     dnds_sliding_vec, dnds_sliding_mean = plot_dnds_sliding(dnds_slide_dict)
-    print "Mean dN/dS over all windows: "+str(dnds_sliding_mean)
-    # @todo: show the user also the whole dnds value somewhere in the webpage
+
+    print("\tCOMPLETE!")
+
+
+    # 
+    # Summary statistics
+    #
     
-	
+    print("===============================================")
+    print("Elapsed time: "+str(time.time() - start_time))   # @time
+    print("Total warnings (missing values): "+str(warning_count))
+    print "Avg. dN/dS over all windows: "+str(dnds_sliding_mean)
+    print("===============================================")
+    # @todo: show the user also the whole dnds value somewhere in the webpage    
+    print("\tdN/dS Sliding Analysis: All Jobs Complete!")
+
     return dnds_sliding_vec, qry_seq_indices
 
 
@@ -682,14 +713,8 @@ if __name__ == "__main__":
     # Plot the sliding window values
     #
     dnds_sliding_vec, dnds_sliding_mean = plot_dnds_sliding(dnds_slide_dict)
-	
+    
     print "Mean dN/dS over all windows: "+str(dnds_sliding_mean)
     # @todo: show the user also the whole dnds value somewhere in the webpage
 
     # }} alternative 2  
-
-#print "Elapsed time: "+str(time.time() - start_time)   # @time
-#print "Total warnings: "+str(warning_count)
-
-
-#>>>>>>> 05a4ed6b693b25c4a39612f651bb499df1af0d8e
