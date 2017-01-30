@@ -2,7 +2,7 @@
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 import BaseHTTPServer
 import pdb
-
+import json
 import dnds
 
 class CORSRequestHandler (SimpleHTTPRequestHandler):
@@ -50,12 +50,14 @@ class CORSRequestHandler (SimpleHTTPRequestHandler):
 
         dnds_data_vec = dnds_data[0]
         qry_seq_indices = dnds_data[1]
-
+		
+		#return_data = '{"dnds_data_vec": dnds_data_vec, "qry_seq_indices": qry_seq_indices}'
+		
         #pdb.set_trace()
 
         self._set_headers()
         self.wfile.write("<html><body><h1>"+str(dnds_data_vec)+"</h1><h2>"+str(qry_seq_indices)+"</h2></body></html>")
-
+		#self.wfile.write(str(dnds_data))
         
 
 if __name__ == '__main__':

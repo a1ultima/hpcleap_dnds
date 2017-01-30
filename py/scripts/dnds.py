@@ -57,13 +57,12 @@ import warnings
 
 #import matplotlib.pyplot as plt 
 import numpy as np 
-
 # andy-developed modules: imported from py/scripts/ (i.e. "." relative to where this file is)
 import changes as codon_pair_data  # /hpcleap_dnds/py/scripts/changes.py
 import align as align_then_trim    # /hpcleap_dnds/py/scripts/align.py
 
 # just for testing, @todo: remove testing imports
-import pdb
+#import pdb
 #import time 
 #start_time = time.time()  # @time
 
@@ -340,11 +339,8 @@ def plot_dnds_sliding(dnds_slide_dict):
     # plt.show()
     # plt.savefig("py/data/dnds_sliding_test.png")
     # avg_matrix = overlap_matrix.mean(axis=1)
-
-    overlap_matrix_avg_lis = overlap_matrix_avg.data.tolist()
-
-
-    return overlap_matrix_avg_lis, overlap_matrix_avg.mean()
+    print overlap_matrix_avg
+    return list(overlap_matrix_avg), overlap_matrix_avg.mean()
 
 
 def dnds_pipeline(qry_seq_in, ref_seq_in):
@@ -405,11 +401,13 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
         #
         # @2:Unpickle codonPair-to-statistics dictionaries
         #
-        f1 = open('./py/data/observed_changes_dict.p','rb') # @todo:coderedundancey = bad, wrap these lines into a function and call the function
+        #f1 = open('./py/data/observed_changes_dict.p','rb') # @todo:coderedundancey = bad, wrap these lines into a function and call the function
+        f1 = open('../data/observed_changes_dict.p','r') # @todo:coderedundancey = bad, wrap these lines into a function and call the function
         observed_changes  = pickle.load(f1)
         f1.close()
 
-        f2 = open('./py/data/potential_changes_dict.p','rb')
+        #f2 = open('./py/data/potential_changes_dict.p','rb')
+        f2 = open('../data/potential_changes_dict.p','r')
         potential_changes = pickle.load(f2)
         f2.close()
 
@@ -504,14 +502,15 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
     # }} 1 alternative 2 {{
 
     # @DONE: work with the sliding window version instead of dnds_whole
-    dnds_slide_dict, warning_count = dnds( qry_seq_trimmed, ref_seq_trimmed, potential_changes, observed_changes, msCorrect='approximate', sliding=True, windowLength=50, stepLength=1 )
+    dnds_slide_dict, warning_count = dnds( qry_seq_trimmed, ref_seq_trimmed, potential_changes, observed_changes, msCorrect='approximate', sliding=True, windowLength=25, stepLength=1 )
     #
     # Plot the sliding window values
     #
     dnds_sliding_vec, dnds_sliding_mean = plot_dnds_sliding(dnds_slide_dict)
     print "Mean dN/dS over all windows: "+str(dnds_sliding_mean)
     # @todo: show the user also the whole dnds value somewhere in the webpage
-
+    
+	
     return dnds_sliding_vec, qry_seq_indices
 
 
@@ -541,6 +540,7 @@ if __name__ == "__main__":
         potential_changes = pickle.load(f2)
         f2.close()
         print "LOADED!!" # @todo:REMOVE
+
     except IOError:
     #else:
     # CREATE NEW (slow)
@@ -682,6 +682,7 @@ if __name__ == "__main__":
     # Plot the sliding window values
     #
     dnds_sliding_vec, dnds_sliding_mean = plot_dnds_sliding(dnds_slide_dict)
+	
     print "Mean dN/dS over all windows: "+str(dnds_sliding_mean)
     # @todo: show the user also the whole dnds value somewhere in the webpage
 
@@ -691,3 +692,4 @@ if __name__ == "__main__":
 #print "Total warnings: "+str(warning_count)
 
 
+#>>>>>>> 05a4ed6b693b25c4a39612f651bb499df1af0d8e

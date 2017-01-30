@@ -11,7 +11,7 @@ import numpy as np
 import pickle
 from  itertools import permutations
 import copy # @todo: remove the deepcopying?
-#import pdb
+import pdb
 
 # FUNCTION DEFS:
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
@@ -157,8 +157,11 @@ def potential_changes_dict(nt_to_aa):
         # @todo:DEBUG: is this assumption correct? Instead of average, perhaps we need to assume e.g. pn1 is "reference sequence" (ancestor), and only store pn1 rather than avg(pn1,pn2)? given an s1 codon and s2 codon, generate average potential 'N' and 'S'
 
     # Pickle the output (later used by ./dnds.py) rather than return value, so this needs to only be run once.
-    with open('./py/data/potential_changes_dict.p','wb') as f:
-        pickle.dump(codonPair_to_potential,f)
+    #pdb.set_trace()
+
+    f = open('../data/potential_changes_dict.p','w')
+    pickle.dump(codonPair_to_potential,f)
+    f.close()
 
     # @todo: check that for a single pair of codons, i.e. one key in .keys(), gives the right 's' and 'n' value, i.e. potential non-synonymous change and potential synonymous change value
 
@@ -302,8 +305,13 @@ def observed_changes_dict(nt_to_aa):
 
     #}} ALTERNATIVE 2
 
-    with open('./py/data/observed_changes_dict.p','wb') as f:
-        pickle.dump(codonPair_to_observed,f)
+    # with open('./py/data/observed_changes_dict.p','wb') as f:
+    #     pickle.dump(codonPair_to_observed,f)
+
+    #f2 = open('./py/data/observed_changes_dict.p','wb')
+    f2 = open('../data/observed_changes_dict.p','wb')
+    pickle.dump(codonPair_to_observed,f2)
+    f2.close()    
 
     #return codonPair_to_observed
 
@@ -314,31 +322,3 @@ if __name__ == "__main__":
     potential_changes_dict(nt_to_aa_d)
     observed_changes_dict(nt_to_aa_d)
     #print('COMPLETE!')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
