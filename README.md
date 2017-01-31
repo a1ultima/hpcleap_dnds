@@ -24,15 +24,15 @@ Combining the two types of information (1. dN/dS analysis, 2. functional domains
 
 
 ## REQUIREMENTS (tested on):
- - python 2.7.3
- - biopython 1.66
- - firefox 50.1.0
+ - Python 2.7.3
+ - Biopython 1.66
+ - Firefox 50.1.0
+ - Bash
  
-## USAGE:
+## USAGE (Bash terminal):
 
-`bash ./start_py_server.sh &&`
-
-`xdg-open ./vb-genes.html  (OR ./vb-genes1.html)`
+`bash ./start_py_server.sh &&
+xdg-open ./vb-genes.html`
 
 [1]: https://www.ncbi.nlm.nih.gov/pubmed/3444411
 
