@@ -36,20 +36,20 @@ Combining the two types of information (1. dN/dS analysis, 2. functional domains
 **1. Start the Python server** 
  - In its own terminal: `bash ./run_py_server.sh`
 
-### 2. Open the web-page:**
+**2. Open the web-page:**
  - In its own terminal: `xdg-open ./vb-genes.html`
 
-### 3. Aggregate sequence data from VectorBase:
+**3. Aggregate sequence data from VectorBase:**
  - Enter a valid VectorBase gene id into the text field (Query)
  - Click "Go!"
  
-### 4. Retrieve protein functional domains:
+**4. Retrieve protein functional domains:**
  - Click the "Protein domain annotation (from VectorBase)" panel
  
-### 5. Compute sliding window dN/dS analysis curve:
+**5. Compute sliding window dN/dS analysis curve:**
  - Click the "Sliding Window dN/dS analysis" panel
  - Enter a valid VectorBase gene id into the text field (Reference), must be an orthologue to the Query (see: [Nei-Gojobori][1] for help)
-
+ - Click "Calculate dN/dS!"
 
 [1]: https://www.ncbi.nlm.nih.gov/pubmed/3444411
 
