@@ -31,7 +31,7 @@ Combining the two types of information (1. dN/dS analysis, 2. functional domains
  
 ## USAGE (Bash terminal):
 
-`bash ./start_py_server.sh &&
+`bash ./run_py_server.sh &&
 xdg-open ./vb-genes.html`
 
 [1]: https://www.ncbi.nlm.nih.gov/pubmed/3444411
