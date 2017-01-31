@@ -33,11 +33,11 @@ Combining the two types of information (1. dN/dS analysis, 2. functional domains
  
 ## USAGE (Bash terminal):
 
-### 1. Start the Python server, in its own terminal:
-`bash ./run_py_server.sh`
+**1. Start the Python server** 
+ - In its own terminal: `bash ./run_py_server.sh`
 
-### 2. Open the web-page, in its own terminal: 
-`xdg-open ./vb-genes.html`
+### 2. Open the web-page:**
+ - In its own terminal: `xdg-open ./vb-genes.html`
 
 ### 3. Aggregate sequence data from VectorBase:
  - Enter a valid VectorBase gene id into the text field (Query)
