@@ -1,13 +1,24 @@
 
 # Sliding window dN/dS web aplication
 
-Web service to reveal selective pressures along a user-specified protein sequence, as well as annotate onto that sequence available protein domains information. An example use case is to explore the hypothesis that a given functional region of a given protein is or has been experiencing strong evolutionary selective pressure. For instance, if multiple functional domains present on an Anopheles gambiae protein, X, yet the protein sequences of the functional domains are shown to be experiencing neutral selection, then perhaps the protein is the product of a pseudogene. 
+Web service to do the following for available VectorBase (VB) gene IDs:
+ 1. Reveal selective pressures along a protein sequence belonging to the user-specified VB gene id (e.g. AGAP010815), using an orthologous VB gene id's protein as a reference (e.g. AAEL001802). Selective pressure is measured in dN/dS, as calculated using the pairwise [Nei-Gojobori algorithm][1], which we modified in a way that allows for Gaussian-smoothed dN/dS sliding window output (see image below).
+ 2. Annotate onto that sequence available protein domains information. 
+ 
+Combining the two types of information (1. and 2.) could aid in exploring hypotheses concerning ancestral evolutionary selective pressures acting on a protein and it's functional domains. One example insight that can be drawn from the combination of information: 1. and 2., is as follows: if we observe that the majority of functional domains annotated onto a protein sequence, overlap well with dN/dS values ~ 0, it is likely that the protein as a whole is in the process of becoming a pseudogene, and so we can conclude that the corresponding functional domains are for some reason no longer essential to that particular species' survival; thus elucidating evolutionary history of the species-in-question's ancestors.
 
 Inline-style: 
 ![alt text](https://github.com/a1ultima/hpcleap_dnds/blob/master/py/data/webapp_demo.PNG "v2017-01-31 version of dnds app")
 
+## REQUIREMENTS (tested on):
+ - python 2.7.3
+ - biopython 1.66
+ - firefox 50.1.0
  
 ## USAGE:
+
 `bash ./start_py_server.sh &&`
+
 `xdg-open ./vb-genes.html  (OR ./vb-genes1.html)`
 
+[1]: https://www.ncbi.nlm.nih.gov/pubmed/3444411
