@@ -1,4 +1,3 @@
-
 # Sliding window dN/dS web aplication
 
 ## What?
@@ -36,3 +35,8 @@ Combining the two types of information (1. dN/dS analysis, 2. functional domains
 `xdg-open ./vb-genes.html  (OR ./vb-genes1.html)`
 
 [1]: https://www.ncbi.nlm.nih.gov/pubmed/3444411
+
+# Aknowledgements:
+ - Boilerplate web code: John Kirmitzoglou, Robert MacCallum
+ - Responsive dN/dS computation, alignment: Andrew Brockman
+ - Responsive functional domains overlay: Wenping Lyu
