@@ -4,9 +4,9 @@
 
 Web service to do the following for available VectorBase (VB) gene IDs:
 
- 1. **dN/dS analysis**: Reveal selective pressures along a protein sequence belonging to the user-specified VB gene id (so-called "Query sequence", e.g. AGAP010815), using an orthologous VB gene id's protein as a reference (e.g. AAEL001802). Selective pressure is measured in dN/dS, as calculated using the pairwise [Nei-Gojobori algorithm][1], which we modified in a way that allows for Gaussian-smoothed dN/dS sliding window output (see image below).
+ 1. **dN/dS analysis**: Reveal selective pressures along a protein sequence belonging to the user-specified VB gene id query (e.g. AGAP010815), using an orthologous VB gene id's protein as a reference (e.g. AAEL001802). Selective pressure is measured in dN/dS, as calculated using the pairwise [Nei-Gojobori algorithm][1], which we modified in a way that allows for Gaussian-smoothed dN/dS sliding window output (see image below).
  
- 2. **Functional Domains Overlay**: Show functional protein domain annotations along the Query sequence, available from VB.
+ 2. **Functional Domains Overlay**: Show functional protein domain annotations along the Query sequence, available from VB (see image below).
 
 ## Why?
 
