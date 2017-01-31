@@ -15,8 +15,8 @@ Combining the two types of information (1. dN/dS analysis, 2. functional domains
 
 ## Example
 
-- Query id: AGAP010815 
-- Reference id: AAEL001802
+- **Query id**: AGAP010815 
+- **Reference id**: AAEL001802
 
 ![alt-text](https://github.com/a1ultima/hpcleap_dnds/blob/master/py/data/webapp_demo_dnds-and-domains.PNG "demo of dnds and domain panels")
 
