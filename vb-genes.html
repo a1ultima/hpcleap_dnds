@@ -16,9 +16,9 @@
 <div class="container">
 
     <div class="starter-template">
-        <h1>The VectorBase gene aggregator</h1>
-        <p class="lead">Aggregate info from a variety of biological databases<br>
-            for genes with a VectorBase ID</p>
+        <h1>VectorBase gene aggregator and dN/dS analysis tool</h1>
+        <p class="lead">Aggregate info for a specific gene, and then perform dN/dS <br>
+            to explore evolutionary selective pressures acting along its protein sequence</p>
 
         <div class="row">
             <div class="col-lg-4"></div>
@@ -80,37 +80,34 @@
                     </div>
                 </div>
             </div>
-<<<<<<< HEAD
             
-=======
 			
->>>>>>> 05a4ed6b693b25c4a39612f651bb499df1af0d8e
             <div class="panel panel-default">
                 <div class="panel-heading" role="tab" id="headingFour">
                     <h4 class="panel-title">
                         <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion"
-                           href="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                           href="#collapseFour" aria-expanded="false" aria-controls="collapseFour"
+						   id="plotDomains">
                             Protein domain annotation (from VectorBase)
                         </a>
                     </h4>
                 </div>
                 <div id="collapseFour" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingFour">
+					<canvas id="myCanvas"  width="0" height="0"></canvas>
                     <div class="panel-body" id="collapseFourBody">
                     </div>
                 </div>
             </div>
-<<<<<<< HEAD
-            
-=======
 			
->>>>>>> 05a4ed6b693b25c4a39612f651bb499df1af0d8e
-            <div class="panel panel-default">
+			
+            
+<!--             <div class="panel panel-default">
                 <div class="panel-heading" role="tab" id="headingFive">
                     <h4 class="panel-title">
                         <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion"
                            href="#collapseFive" aria-expanded="false" aria-controls="collapseFive"
                            id="buildTree">
-                            Gene tree (from VectorBase)
+                            Gene tree (from VectorBase) [ DO NOT CLICK! (still buggy) ]
                         </a>
                     </h4>
                 </div>
@@ -118,43 +115,31 @@
                     <div class="panel-body" id="collapseFiveBody">
                     </div>
                 </div>
-            </div>
-<<<<<<< HEAD
+            </div> -->
             
             <div class="panel panel-default">
-=======
-			
-			<div class="panel panel-default">
->>>>>>> 05a4ed6b693b25c4a39612f651bb499df1af0d8e
                 <div class="panel-heading" role="tab" id="headingSix">
                     <h4 class="panel-title">
                         <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion"
                            href="#collapseSix" aria-expanded="false" aria-controls="collapseSix"
                            id="run-py">
-                            Python interface
+                            Sliding Window dN/dS analysis
                         </a>
                     </h4>
                 </div>
                 <div id="collapseSix" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingSix">
-<<<<<<< HEAD
-                    <input id="query-text-ref-seq" type="text" class="form-control" placeholder="VectorBase Gene ID (must be an ortholog of the of the query above)">  
+					<canvas id="myCanvas2"  width="0" height="0"></canvas>
+                    <input id="query-text-ref-seq" type="text" class="form-control" placeholder="Reference Sequence: Must be a VectorBase Gene ID, orthologous to the Query Gene ID above">  
                     <span class="input-group-btn">
                         <button class="btn btn-default" type="button" id="btn-go-run-dnds">Calculate dN/dS!</button> 
                     </span>
-=======
->>>>>>> 05a4ed6b693b25c4a39612f651bb499df1af0d8e
                     <div class="panel-body" id="collapseSixBody">
                     </div>
                     <!-- @todo:andy:added button to run python script vvvv, user pastes geneid of the ref-seq and pressing button both searches for the ref-seq via REST to VB then runs the dnds.py using query-seq gene id and ref-seq gene id as input -->
                 </div>
             </div>
-<<<<<<< HEAD
             
             
-=======
-			
-			
->>>>>>> 05a4ed6b693b25c4a39612f651bb499df1af0d8e
         </div>
 
     </div>
@@ -177,26 +162,9 @@
     </script>
 
 
-    <script type="text/x-jsrender" id="domains">
-
-    <div>
-<<<<<<< HEAD
-        <p>&gt{{html:start}}<br>
-        {{html:end}}</p>
-    </div>
-
     </script>   
     
     
-=======
-		<p>Input: {{html:input}}</p>
-		<p>Output: {{html:output}}</p>
-    </div>
-
-    </script>	
-	
-	
->>>>>>> 05a4ed6b693b25c4a39612f651bb499df1af0d8e
     <!-- JS includes. Dependencies must be declared first -->
     <script type="text/javascript" src="http://code.jquery.com/jquery-3.1.1.min.js"></script>
     <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
@@ -219,13 +187,18 @@
             spinner.spin(spinTarget);
             requestAjax(query);
         });
-
+		
+		$('#plotDomains').on("click", function () {
+            var query = $('#query-text').val();
+            spinner.spin(spinTarget);
+            requestDomains(query);
+		});
+		
         $('#buildTree').on("click", function () {
             var query = $('#query-text').val();
             spinner.spin(spinTarget);
             requestTree(query);
         });
-<<<<<<< HEAD
 
         
         // @done:andy:button now works, dnds.py script still needs to be integrated properly though
@@ -245,31 +218,19 @@
             //var qry_and_ref_seq = qry_seq_fasta.concat(" ",ref_seq_fasta);
 
             // moving within the requestReferenceSeq function to make sure requestReferenceSeq is completed
-            // runPy(qry_seq_fasta, ref_seq_fasta);  // @ANDY:2016-11-27: runPy() does not seem to work when called here, it must be run within requestReferenceSeq(), otherwise a bug. This is because requestReferenceSeq is an ajax call, and the asynchronous running of it means runPy would be trying to take an input argument that had not been assigned (the global variable ref_seq_fasta that is assigned in requestReferenceSeq), i.e. the requestReferenceSeq takes too long to create it's global variable, and so runPy() tries to run asyncrhonously taking an input argument that has not yet been assigned
+            // runPy(qry_seq_fasta, ref_seq_fasta);  // @ANDY:2016-11-27: runPy() does not seem to work, debugging: RunPy() changed to runPy(), lowercase, in case naming conventions is somehow confusing the code
             spinner.stop();
-=======
-		
-		$('#run-py').on("click", function () {
-            var query = $('#query-text').val();
-            spinner.spin(spinTarget);
-            RunPy(query);
->>>>>>> 05a4ed6b693b25c4a39612f651bb499df1af0d8e
         });
 
         
+        //  AGAP010815   AAEL001802
 
         function requestAjax(geneId) {
             var urlArchive = 'https://www.vectorbase.org/rest/archive/id/' + geneId + '?content-type=application/json';
             var urlCDna = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=cds&multiple_sequences=1&mask=soft&content-type=application/json';
             var urlProtein = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=protein&multiple_sequences=1&content-type=application/json';
-<<<<<<< HEAD
-            var urlDomains = 'https://www.vectorbase.org/rest/overlap/translation/' + geneId + '-PA?feature=protein_feature;content-type=application/json';
-
-=======
-			var urlDomains = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=protein&multiple_sequences=1&content-type=application/json';
->>>>>>> 05a4ed6b693b25c4a39612f651bb499df1af0d8e
-            $.when($.getJSON(urlArchive), $.getJSON(urlCDna), $.getJSON(urlProtein), $.getJSON(urlDomains))
-                    .done(function (json1, json2, json3, json4) {
+            $.when($.getJSON(urlArchive), $.getJSON(urlCDna), $.getJSON(urlProtein))
+                    .done(function (json1, json2, json3) {
 
                         // Render archive info
                         var template = $.templates("#archiveId");
@@ -297,52 +258,12 @@
                         json3[0].forEach(function (element) {
                             html += template.render(element)
                         });
-<<<<<<< HEAD
                         
                         $('#collapseThreeBody').html(html);
-                        
-                        // Reset template and html
-                        template = $.templates('#domains');
-                        html = '';
-                        
 
-                        
-=======
-						
-						$('#collapseThreeBody').html(html);
-						
-						// Reset template and html
-                        template = $.templates('#fastaSequence');
-                        html = '';
-						
-
-						
->>>>>>> 05a4ed6b693b25c4a39612f651bb499df1af0d8e
-                        // Render protein domains
-                        json4[0].forEach(function (element) {
-                            html += template.render(element)
-                        });
-<<<<<<< HEAD
-                        
-                        $('#collapseFourBody').html(html);
-                        
-                        // Reset template and html
-                        template = $.templates('#fastaSequence');
-                        html = '';
-                        
-=======
-						
-						$('#collapseFourBody').html(html);
-						
-						// Reset template and html
-                        template = $.templates('#fastaSequence');
-                        html = '';
-						
->>>>>>> 05a4ed6b693b25c4a39612f651bb499df1af0d8e
-
-                        $('#accordion').show();
+						$('#accordion').show();
                         spinner.stop();
-
+						
                     }).fail(function () {
                         spinner.stop();
                         console.log('Failed while loading irViolinStats');
@@ -350,65 +271,123 @@
 
         };
 
-        // @todo:andy:add a function, linked to a button (@todo), to send a REST query to VB asking for the reference sequence, then spit into the Python Interface panel
+
         function requestReferenceSeq(geneId) {
             var urlCDna = 'https://www.vectorbase.org/rest/sequence/id/' + geneId + '?type=cds&multiple_sequences=1&mask=soft&content-type=application/json';
 
             $.when($.getJSON(urlCDna))
                     .done(function (json1) {
 
-                        
-
-                        // // @todo:not sure why this needs json1[0], whereas in requestAjax the transcript sequence part needs json[0][0]... // if the REST query returned a single seq, we use json[0]['seq'], otherwise we need e.g. json[0][0]['seq'], 
-                        // if (json1.length==1){
-                        //     json_ref_seq = json[0]
-                        // } else {
-                        //     json_ref_seq = json
-                        // }
-
-<<<<<<< HEAD
-                        // @todo:andy: pastes the sequence into the Python Interface panel, uncommented for now v*7
-                        // // Render archive info
-                        // var template = $.templates("#fastaSequence");
-                        // var html = template.render(json1[0]);
-                        // $('#collapseSixBody').html(html);
-                        // // Reset template and html
-                        // template = $.templates('#fastaSequence');
-                        // html = '';
-
-                        //$('#accordion').show(); // @todo:andy:is this needed?
-                        //alert("cool");
-
-                        ref_seq_fasta = json1[0]['seq'];
-                        //return ref_seq_fasta_return; // return the reference sequence, for input arg to the dnds.py later: $('#btn-go-run-dnds') // @todo: this assumes the gene id given as the orthologue to the query gene id, only has a single transcript (it takes the first one available). This assumption is only true for a presumably small subset of gene ids. How do we deal with this...?
-
+                       ref_seq_fasta = json1[0]['seq'];
                         runPy(qry_seq_fasta, ref_seq_fasta);  // @ANDY:2016-11-27: runPy() does not seem to work, debugging: RunPy() changed to runPy(), lowercase, in case naming conventions is somehow confusing the code
 
                     });
         };
         
-
+		
+		function requestDomains(geneId){
+				
+		        var urlDomains = 'https://www.vectorbase.org/rest/overlap/translation/' + geneId + '-PA?feature=protein_feature;content-type=application/json';
+			    $.when($.getJSON(urlDomains))
+                    .done(function (json) {
+						var n = 1;
+						var min = 1;
+						var max = 1; 
+                        json.forEach(function (element) {
+							if(min>element.start){
+								min=element.start
+							}
+							if(max<element.end){
+								max=element.end
+							}
+							if (element.description!=""){
+								n++;
+							}
+						}
+						);
+						
+						var myCanvas = document.getElementById("myCanvas");
+						var ctx = myCanvas.getContext("2d");
+						ctx.font = "15px Arial";
+						ratio=(window.innerWidth*0.42)/max;
+						ctx.canvas.width  = window.innerWidth;
+						ctx.canvas.height = 20*(n+1);
+						ctx.lineWidth = 3;
+						// set line color
+						ctx.strokeStyle = '#ff0000';
+						n=1
+						ctx.fillText(min,min*ratio, 20*n-5);
+						ctx.fillText(max,max*ratio, 20*n-5);
+						ctx.moveTo(min*ratio, 20*n);
+						ctx.lineTo(max*ratio, 20*n);
+						ctx.fillText("Full",max*ratio+180, 20*n);
+						ctx.fillText(min,max*ratio+210, 20*n);
+						ctx.fillText(" -> ", max*ratio+240, 20*n);
+						ctx.fillText(max,max*ratio+260, 20*n);
+						n++;
+						json.forEach(function (element) {
+							if (element.description!=""){
+								ctx.fillText(n-1,max*ratio+180, 20*n);
+								ctx.fillText(element.start,max*ratio+210, 20*n);
+								ctx.fillText(" -> ",max*ratio+240, 20*n);
+								ctx.fillText(element.end,max*ratio+260, 20*n);
+								//ctx.fillText(element.start,element.start*ratio, 20*n-5);
+								//ctx.fillText(element.end,element.end*ratio, 20*n-5);
+								ctx.fillText(n-1 + ") " + element.description,element.start*ratio, 20*n-5);
+								ctx.moveTo(element.start*ratio, 20*n);
+								ctx.lineTo(element.end*ratio, 20*n);
+								ctx.stroke();
+								n++;
+							}	
+                        }
+						);
+						
+				}).fail(function () {
+                        spinner.stop();
+                        console.log('Failed!');
+				});
+		spinner.stop();
+		};
         
-=======
-        }
 		
-		function RunPy(geneId) {
-			$.ajax({
-					type: 'POST',
-					url: "py/scripts/example.py",
-					data: {param: geneId},
-					dataType: "text",
-					success: function(response){
-						output = response;
-						alert(output);
-					}
-			}).done(function(data){
-			console.log(data);
-			alert(data);
-			});
-		}
+		function plotdNdS(datax, datay){
+				var myCanvas = document.getElementById("myCanvas2");
+				var ctx = myCanvas.getContext("2d");
+				ctx.font = "6px Arial";
+				ratio=(window.innerWidth*1.6)/datax[datax.length-1];
+				ctx.canvas.width  = window.innerWidth;
+				ctx.canvas.height = 210;
+				console.log(ratio)
+				ctx.moveTo(0, 190)
+				for(var i=0;i<datax.length;i++){
+				ctx.strokeStyle = '#ff0000';
+				ctx.lineWidth = 1;
+				if(datay[i]!='NaN'){
+					ctx.moveTo((datax[i]/3.0)*ratio, 150*(datay[i]));
+					ctx.lineTo((datax[i]/3.0+1)*ratio, 150*(datay[i]));
+				}
+				else {
+					ctx.moveTo((datax[i]/3.0)*ratio, 150);
+					ctx.lineTo((datax[i]/3.0+1)*ratio, 150);
+				}
+				
+				//ctx.stroke();
+				//ctx.lineWidth = 1;
+				//ctx.strokeStyle = '#2F2F2F';
+				ctx.moveTo((datax[i]/3.0)*ratio, 190);
+				ctx.lineTo((datax[i]/3.0+1)*ratio, 190);
+				if(datax[i+1]-datax[i]>3){
+					console.log((datax[i+1]-datax[i])/3.0)
+					ctx.fillText(datax[i]/3.0, datax[i]/3.0*ratio, 185);
+					ctx.fillText(datax[i+1]/3.0, datax[i+1]/3.0*ratio, 200);
+				}
+				ctx.stroke();
+				}
+
+				
+		};
 		
->>>>>>> 05a4ed6b693b25c4a39612f651bb499df1af0d8e
+		
         function requestTree(geneId) {
             var urlTree = 'https://www.vectorbase.org/rest/genetree/member/id/' + geneId +
                     '?content-type=text/x-phyloxml+xml' + ' pre';
@@ -470,17 +449,6 @@
 
             // Response handlers. @xhr-body
             xhr.onload = function(qry_seq, ref_seq) {
-                // @TODO: remove the next three lines after runPy() works
-                // var text = xhr.responseText;
-                // var title = getTitle(text);
-                // alert('Response from CORS request to ' + url + ': ' + title);
-                // var text = xhr.responseText;
-                // var title = getTitle(text);
-
-                // var text = xhr.responseText;
-                // alert('Response from CORS request to ' + text);
-
-                // Run the dnds.py calculator  // @done:geneId is not actually the input we want, change later
 
                 var qry_and_ref_seq = qry_seq.concat("+",ref_seq);
                 runPy(qry_and_ref_seq);
@@ -495,6 +463,30 @@
             //return;  // @todo:do I need to add return
         };
 
+		function parseOut(data){
+				var map = { };
+				$(data).each(function(_, node) {
+				map[ _ ] = { };
+				map[ _ ][ node.nodeName ] = node.textContent;
+				});
+				console.log(map);
+				var dnds=map[0]
+				var proid=map[1]
+				var dnds1= dnds['H1'].split(",")
+				var proid1= proid['H2'].split(",").map(Number)
+				first=dnds1[0].split("[")
+				last=dnds1[dnds1.length-1].split("]")
+				dnds1[0]=first[1]
+				dnds1[dnds1.length-1]=last[0]
+				dnds1=dnds1.map(Number)
+				plotdNdS(proid1, dnds1)
+				console.log(dnds1)
+				console.log(proid1)
+				
+				//return dnds1, proid1
+		}
+		
+		 //  AGAP010815   AAEL001802
         // dnds.py calculator
         function runPy(qry_seq, ref_seq) {
             $.ajax({
@@ -507,15 +499,14 @@
                     output = response;
                 }
             }).done(function(data){
-                console.log(data);
-                //alert(data); // @done:paste the contents of the script to altert
-                //return;  // @todo:do I need to add return?
-
+                //console.log(data);
                 // Insert the dnds vector into the Python Interface Panel
-                $('#collapseSixBody').html(output);
-                // Reset template and html
-                template = $.templates('#fastaSequence');
-                html = '';
+				
+				parseOut(output)
+				
+				//$('#collapseSixBody').html(str(dnds1));
+				
+              
             }).fail(function () {
                 spinner.stop();
                 console.log('Failed while running runPy()');

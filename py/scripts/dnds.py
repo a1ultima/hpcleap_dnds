@@ -359,9 +359,9 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
     #   Open dictionaries that have cached computationally intensively 
     #   produced results, these are all possible codon pairs with cached statistics for all possible pairs regardless of user input seqs 
 
-    print("============================================================================") # @todo:REMOVE
-    print("dN/dS sliding analysis: pre-cached statistics for all possible codon pairs...")
-    print("============================================================================") # @todo:REMOVE
+    print("\t============================================================================") # @todo:REMOVE
+    print("\tdN/dS sliding analysis: pre-cached statistics for all possible codon pairs...")
+    print("\t============================================================================") # @todo:REMOVE
 
     #
     try:       
@@ -379,7 +379,7 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
         potential_changes = pickle.load(f2)
         f2.close()
 
-        print("\tLOADED!") # @todo:REMOVE
+        print("\t\tLOADED!") # @todo:REMOVE
         
     except IOError:
     #else:
@@ -421,7 +421,7 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
 
         # }} alternative 2
 
-        print("\tCREATED!") # @todo:REMOVE
+        print("\t\tCREATED!") # @todo:REMOVE
 
 
     #
@@ -460,9 +460,9 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
     # Benchmarking vs. MATLAB #
     ###########################
 
-    print("=========================================")
-    print("Processing heuristic codon alignments....")
-    print("=========================================")
+    print("\t=========================================")
+    print("\tProcessing heuristic codon alignments....")
+    print("\t=========================================")
 
     # @done:@testing:benchmark vs. matlab: @todo: place in README these details
     #   using s1_AGAP010815_RA and s2_AAEL001802_RA (after aligning/trimming)
@@ -502,7 +502,7 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
 
     # @Note: benhamrking: it is qry_seq_trimmed and ref_seq_trimmed that should be used as input to MATLAB's dnds() function, for benchmarking
 
-    print("\tCOMPLETE!")
+    print("\t\tCOMPLETE!")
 
     #}} alternative 2
 
@@ -510,9 +510,9 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
 
     # alternative 1 {{
 
-    print("===========================")
-    print("Sliding window analysis....")
-    print("===========================")
+    print("\t===========================")
+    print("\tSliding window analysis....")
+    print("\t===========================")
 
     # # @NOTE:uncomment below to achieve dnds of 0.15.. or 0.164 if using exact method, interestingly 
     # dnds_whole, warning_count = dnds( qry_seq_trimmed, ref_seq_trimmed, potential_changes, observed_changes, msCorrect='approximate', sliding=False)
@@ -527,20 +527,20 @@ def dnds_pipeline(qry_seq_in, ref_seq_in):
     #
     dnds_sliding_vec, dnds_sliding_mean = plot_dnds_sliding(dnds_slide_dict)
 
-    print("\tCOMPLETE!")
+    print("\t\tCOMPLETE!")
 
 
     # 
     # Summary statistics
     #
     
-    print("===============================================")
-    print("Elapsed time: "+str(time.time() - start_time))   # @time
-    print("Total warnings (missing values): "+str(warning_count))
-    print "Avg. dN/dS over all windows: "+str(dnds_sliding_mean)
-    print("===============================================")
+    print("\t===============================================")
+    print("\tElapsed time: "+str(time.time() - start_time))   # @time
+    print("\tTotal warnings (missing values): "+str(warning_count))
+    print "\tAvg. dN/dS over all windows: "+str(dnds_sliding_mean)
+    print("\t===============================================")
     # @todo: show the user also the whole dnds value somewhere in the webpage    
-    print("\tdN/dS Sliding Analysis: All Jobs Complete!")
+    print("\t\tdN/dS Sliding Analysis: All Jobs Complete!")
 
     return dnds_sliding_vec, qry_seq_indices
 
