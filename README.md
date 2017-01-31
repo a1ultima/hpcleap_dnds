@@ -37,6 +37,7 @@ Combining the two types of information (1. dN/dS analysis, 2. functional domains
 [1]: https://www.ncbi.nlm.nih.gov/pubmed/3444411
 
 # Aknowledgements:
- - Boilerplate web code: John Kirmitzoglou, Robert MacCallum
- - Responsive dN/dS computation, alignment: Andrew Brockman
- - Responsive functional domains overlay: Wenping Lyu
+ - **Boilerplate web code, responsive aggregator**: John Kirmitzoglou, Robert MacCallum
+ - **Responsive functional domains overlay**: Wenping Lyu
+ - **Responsive dN/dS computation, Slow alignment:** Andrew Brockman
+ 
