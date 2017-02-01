@@ -1,4 +1,4 @@
-# Sliding window dN/dS (Ka/Ks) web aplication
+# VectorBase gene aggregator and dN/dS analysis tool (Ka/Ks)
 
 ## What?
 
