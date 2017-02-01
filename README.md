@@ -56,6 +56,6 @@ Combining the two types of information (1. dN/dS analysis, 2. functional domains
 
 # Aknowledgements:
  - **Boilerplate web code, responsive aggregator**: John Kirmitzoglou, Robert MacCallum
- - **Responsive functional domains overlay**: Wenping Lyu
- - **Responsive dN/dS computation, slow alignment:** Andrew Brockman
+ - **Responsive functional domains overlay, modified web code**: Wenping Lyu
+ - **Responsive dN/dS computation, slow alignment, modified web code:** Andrew Brockman
  
