@@ -4,7 +4,7 @@
 
 Web service to do the following for available VectorBase (VB) gene IDs:
 
- 1. **dN/dS analysis**: a.k.a. Ka/Ks analysis, reveals selective pressures along a protein sequence belonging to the user-specified VB gene id query (e.g. AGAP010815), using an orthologous VB gene id's protein as a reference (e.g. AAEL001802). Selective pressure is measured in dN/dS, as calculated using the pairwise [Nei-Gojobori algorithm][1], which we modified in a way that allows for Gaussian-smoothed dN/dS sliding window output (see image below). Responsiveness was achieved by pickling pre-computed input statistics for the dN/dS outputs, for all possible codon, and amino acid pairs: ~900 x speedup achieved. [Accuracy & Performance benchmarks vs. MATLAB][2]. If any of this confuses you, please see [Here][3] for detailed explanations, and links to publications, of best practices for dN/dS analysis.
+ 1. **dN/dS analysis**: a.k.a. Ka/Ks analysis, reveals selective pressures along a protein sequence belonging to the user-specified VB gene id query (e.g. AGAP010815), using an orthologous VB gene id's protein as a reference (e.g. AAEL001802). Selective pressure is measured in dN/dS, as calculated using the pairwise [Nei-Gojobori algorithm][1], which we modified in a way that allows for Gaussian-smoothed dN/dS sliding window output (see image below). Responsiveness was achieved by pickling pre-computed input statistics for the dN/dS outputs, for all possible codon, and amino acid pairs: ~900 x speedup achieved. [Accuracy & Performance benchmarks vs. MATLAB][2]. If any of this confuses you, please see [here][3] for detailed explanations, and links to publications, of best practices for dN/dS analysis. Or [here][4] for mathematical notation.
  
  2. **Functional Domains Overlay**: Show functional protein domain annotations along the Query sequence, available from VB (see image below). Responsiveness was achieved using REST api calls to VB.
  
@@ -52,6 +52,7 @@ Combining the two types of information (1. dN/dS analysis, 2. functional domains
 [1]: https://www.ncbi.nlm.nih.gov/pubmed/3444411
 [2]: https://github.com/a1ultima/hpcleap_dnds/blob/master/py/data/benchmarks.md
 [3]: https://www.biostars.org/p/5817/
+[4]: http://www.megasoftware.net/mega4/WebHelp/part_iv___evolutionary_analysis/computing_evolutionary_distances/distance_models/synonymouse_and_nonsynonymous_substitution_models/hc_nei_gojobori_method.htm
 
 # Aknowledgements:
  - **Boilerplate web code, responsive aggregator**: John Kirmitzoglou, Robert MacCallum
