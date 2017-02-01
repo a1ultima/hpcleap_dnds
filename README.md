@@ -1,10 +1,10 @@
-# VectorBase gene aggregator and dN/dS analysis tool (Ka/Ks)
+# VectorBase gene aggregator and dN/dS analysis tool
 
 ## What?
 
 Web service to do the following for available VectorBase (VB) gene IDs:
 
- 1. **dN/dS analysis**: Reveal selective pressures along a protein sequence belonging to the user-specified VB gene id query (e.g. AGAP010815), using an orthologous VB gene id's protein as a reference (e.g. AAEL001802). Selective pressure is measured in dN/dS, as calculated using the pairwise [Nei-Gojobori algorithm][1], which we modified in a way that allows for Gaussian-smoothed dN/dS sliding window output (see image below). Responsiveness was achieved by pickling pre-computed input statistics for the dN/dS outputs, for all possible codon, and amino acid pairs: ~900 x speedup achieved. [Accuracy & Performance benchmarks vs. MATLAB][2]. If any of this confuses you, please see [Here][3] for detailed explanations, and links to publications, of best practices for dN/dS analysis.
+ 1. **dN/dS analysis**: a.k.a. Ka/Ks analysis, reveals selective pressures along a protein sequence belonging to the user-specified VB gene id query (e.g. AGAP010815), using an orthologous VB gene id's protein as a reference (e.g. AAEL001802). Selective pressure is measured in dN/dS, as calculated using the pairwise [Nei-Gojobori algorithm][1], which we modified in a way that allows for Gaussian-smoothed dN/dS sliding window output (see image below). Responsiveness was achieved by pickling pre-computed input statistics for the dN/dS outputs, for all possible codon, and amino acid pairs: ~900 x speedup achieved. [Accuracy & Performance benchmarks vs. MATLAB][2]. If any of this confuses you, please see [Here][3] for detailed explanations, and links to publications, of best practices for dN/dS analysis.
  
  2. **Functional Domains Overlay**: Show functional protein domain annotations along the Query sequence, available from VB (see image below). Responsiveness was achieved using REST api calls to VB.
  
