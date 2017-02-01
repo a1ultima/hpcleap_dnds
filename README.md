@@ -23,10 +23,6 @@ Combining the two types of information (1. dN/dS analysis, 2. functional domains
 
 ![alt-text](https://github.com/a1ultima/hpcleap_dnds/blob/master/py/data/webapp_demo_dnds-and-domains.PNG "demo of dnds and domain panels")
 
-
-
-
-
 ## REQUIREMENTS (tested on):
  - Python 2.7.3
  - Biopython 1.66
@@ -54,7 +50,7 @@ Combining the two types of information (1. dN/dS analysis, 2. functional domains
  - Click "Calculate dN/dS!"
 
 [1]: https://www.ncbi.nlm.nih.gov/pubmed/3444411
-[2]: https://github.com/a1ultima/hpcleap_dnds/blob/master/py/data/benchmarks.txt
+[2]: https://github.com/a1ultima/hpcleap_dnds/blob/master/py/data/benchmarks.md
 
 # Aknowledgements:
  - **Boilerplate web code, responsive aggregator**: John Kirmitzoglou, Robert MacCallum
