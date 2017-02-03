@@ -10,7 +10,7 @@ Web service to do the following for available VectorBase (VB) gene IDs:
  
  3. **Aggregate data**: Bioinformatics data available for the user-specified VB gene id query (e.g. AGAP010815): General info, Transcript sequences (DNA) and Protein sequences (AA). Responsiveness was achived using REST api calls to VB.
 
-4. **Codon alignment (coming soon)**: Codon alingments of Query and Reference sequences were necessary as input for dN/dS computations, but alignments are not yet shown in their own panel in the web app. Alignments were not optimised for responsiveness, this is currently a performance bottleneck, to be fixed soon. 
+ 4. **Codon alignment (coming soon)**: Codon alingments of Query and Reference sequences were necessary as input for dN/dS computations, but alignments are not yet shown in their own panel in the web app. Alignments were not optimised for responsiveness, this is currently a performance bottleneck, to be fixed soon. 
 
 ## Why?
 
