@@ -3,7 +3,7 @@ Accuracy & Performance benchmarks vs. MATLAB's Bioinformatics Toolbox dnds() fun
 
 # Accuracy benchmarks
 
-**Concluding remarks:** Whole sequence implementations are comporable w/ MATLAB, slightly less comparable in sliding window implementation, but it is likely due to: (i) the gaussian smoothing heuristic we used to reduce missing values, and (ii) inflating floating point errors when computing many windows as opposed to one single whole-seq window (we could have used double precision, but we used single).
+**Concluding remarks:** Whole sequence implementations are comparable w/ MATLAB, slightly less comparable in sliding window implementation, but it is likely due to: (i) the Gaussian smoothing heuristic we used to reduce missing values, and (ii) inflating floating point errors when computing many windows as opposed to one single whole-seq window (we could have used double precision, but we used single).
 
 **Input data:** 
  - Query: *AGAP010815_RA*
@@ -15,7 +15,7 @@ Accuracy & Performance benchmarks vs. MATLAB's Bioinformatics Toolbox dnds() fun
 
 1.0958 vs. 1.04939841193 (Elapsed time: 1.952491045s)
 
-## Accuracy  benchmark - Sliding window dN/dSL:
+## Accuracy  benchmark - Sliding window dN/dS:
 
 **MATLAB mean(sliding dnds) vs. andy-wenping mean(sliding dnds): Mean dN/dS over all 50-codon long windows:**
 
