@@ -1,5 +1,5 @@
 
-Accuracy & Performance benchmarks vs. MATLAB's Bioinformatics Toolbox dnds() function for (i) whole sequence and (ii) sliding window implementations...
+Accuracy benchmarks vs. MATLAB's Bioinformatics Toolbox dnds() function for (i) whole sequence and (ii) sliding window implementations...
 
 # Accuracy benchmarks
 
