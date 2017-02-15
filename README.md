@@ -31,7 +31,7 @@ Combining the two types of information (1. dN/dS analysis, 2. functional domains
  
 ## USAGE (Bash terminal):
 
-**1. Start the Python server (this is just so the web page can talk with Python)** 
+**1. Start the Python server (this is just so the web page can talk with Python):** 
  - In its own terminal: `bash ./run_py_server.sh`
 
 **2. Open the web-page:**
