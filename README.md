@@ -44,7 +44,7 @@ Combining the two types of information (1. dN/dS analysis, 2. functional domains
 **4. Retrieve protein functional domains:**
  - Click the "Protein domain annotation (from VectorBase)" panel
  
-**5. Compute sliding window dN/dS analysis curve:**
+**5. Compute sliding window dN/dS analysis curve (this is what we need the Python server for):**
  - Click the "Sliding Window dN/dS analysis" panel
  - Enter a valid VectorBase gene id into the text field (Reference), must be an orthologue to the Query (see: [Nei-Gojobori][1] for help)
  - Click "Calculate dN/dS!"
