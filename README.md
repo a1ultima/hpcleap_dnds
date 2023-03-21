@@ -59,8 +59,4 @@ Combining the two types of information (1. dN/dS analysis, 2. functional domains
 [8]: https://github.com/a1ultima/hpcleap_dnds/blob/master/py/scripts/changes.py
 [9]: https://github.com/a1ultima/hpcleap_dnds/blob/master/vb-genes.html
 
-# Acknowledgements:
- - **Boilerplate web code, responsive aggregator**: John Kirmitzoglou, Robert (Bob) MacCallum
- - **Responsive functional domains overlay, modified web code**: Wenping Lyu
- - **Responsive dN/dS computation, slow alignment, modified web code:** Andrew (Andy) Brockman
  
